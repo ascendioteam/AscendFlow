@@ -1130,7 +1130,7 @@ function renderRows() {
       '<td>' + (r.bizType||'—') + '</td>' +
       '<td>' + (r.painPoint||'—') + '</td>' +
       '<td><div class="status-dd-wrap">' +
-        '<div class="status-pill ' + tagCls(r.status) + '" onclick="event.stopPropagation();toggleStatusDd(\'' + r.id + '\')">' +
+        '<div class="status-pill ' + tagCls(r.status) + '" data-ddid="' + r.id + '" onclick="event.stopPropagation();toggleStatusDd(\'' + r.id + '\')">' +
           r.status +
           '<svg viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l3 3 3-3"/></svg>' +
         '</div>' +
@@ -1148,23 +1148,30 @@ function renderRows() {
 }
 
 
+function positionDd(dd, pill) {
+  var rect = pill.getBoundingClientRect();
+  var ddH = dd.scrollHeight || 280;
+  var spaceBelow = window.innerHeight - rect.bottom;
+  dd.style.left = rect.left + 'px';
+  dd.style.minWidth = Math.max(180, rect.width) + 'px';
+  if (spaceBelow < ddH + 8 && rect.top > ddH + 8) {
+    dd.style.top = (rect.top - ddH - 4) + 'px';
+  } else {
+    dd.style.top = (rect.bottom + 4) + 'px';
+  }
+}
+
 function toggleStatusDd(id) {
   var dd = document.getElementById('sdd-' + id);
   if (!dd) return;
   var isOpen = dd.classList.contains('open');
   document.querySelectorAll('.status-inline-dd').forEach(function(el){ el.classList.remove('open'); });
+  _activeDdPill = null;
   if (!isOpen) {
-    var pill = document.querySelector('[onclick*="toggleStatusDd(' + id + ')"]');
+    var pill = document.querySelector('[data-ddid="' + id + '"]');
     if (pill) {
-      var rect = pill.getBoundingClientRect();
-      var ddH = 280; // estimated dropdown height
-      var spaceBelow = window.innerHeight - rect.bottom;
-      if (spaceBelow < ddH && rect.top > ddH) {
-        dd.style.top = (rect.top - ddH - 4) + 'px'; // flip up
-      } else {
-        dd.style.top = (rect.bottom + 4) + 'px'; // open down
-      }
-      dd.style.left = rect.left + 'px';
+      positionDd(dd, pill);
+      _activeDdPill = pill;
     }
     dd.classList.add('open');
   }
@@ -1189,8 +1196,16 @@ function quickStatus(id, status) {
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.status-dd-wrap')) {
     document.querySelectorAll('.status-inline-dd').forEach(function(el){ el.classList.remove('open'); });
+    _activeDdPill = null;
   }
 });
+
+// Close dropdown on any scroll (table or page)
+var _activeDdPill = null;
+document.addEventListener('scroll', function() {
+  document.querySelectorAll('.status-inline-dd').forEach(function(el){ el.classList.remove('open'); });
+  _activeDdPill = null;
+}, true); // capture phase catches scroll on all elements including tbl-wrap
 
 
 
@@ -1276,7 +1291,7 @@ function moveToLeads(id) {
     date: r.date || new Date().toISOString().split('T')[0],
     notes: r.notes || ''
   };
-  S.leads.push(lead);
+  S.leads.unshift(lead);
   saveState();
   toast(r.name + ' moved to Leads ✓');
   if (cur === 'leads') renderLeadsView();
@@ -1327,9 +1342,9 @@ function saveRow(id) {
   if (id) {
     var idx = -1;
     S.rows.forEach(function(r,i){ if(r.id===id) idx=i; });
-    if (idx > -1) S.rows[idx] = row; else S.rows.push(row);
+    if (idx > -1) S.rows[idx] = row; else S.rows.unshift(row);
   } else {
-    S.rows.push(row);
+    S.rows.unshift(row);
   }
   saveState(); closeModal();
   if (cur === 'tracking') renderRows();
@@ -1528,18 +1543,12 @@ function toggleLeadStatusDd(id) {
   if (!dd) return;
   var isOpen = dd.classList.contains('open');
   document.querySelectorAll('.status-inline-dd').forEach(function(el){ el.classList.remove('open'); });
+  _activeDdPill = null;
   if (!isOpen) {
-    var pill = document.querySelector('[onclick*="toggleLeadStatusDd(' + id + ')"]');
+    var pill = document.querySelector('[data-ddid="lsdd-' + id + '"]');
     if (pill) {
-      var rect = pill.getBoundingClientRect();
-      var ddH = 280;
-      var spaceBelow = window.innerHeight - rect.bottom;
-      if (spaceBelow < ddH && rect.top > ddH) {
-        dd.style.top = (rect.top - ddH - 4) + 'px';
-      } else {
-        dd.style.top = (rect.bottom + 4) + 'px';
-      }
-      dd.style.left = rect.left + 'px';
+      positionDd(dd, pill);
+      _activeDdPill = pill;
     }
     dd.classList.add('open');
   }
@@ -1597,9 +1606,9 @@ function saveLead(id) {
   if (id) {
     var idx = -1;
     S.leads.forEach(function(l,i){ if(l.id===id) idx=i; });
-    if (idx > -1) S.leads[idx] = lead; else S.leads.push(lead);
+    if (idx > -1) S.leads[idx] = lead; else S.leads.unshift(lead);
   } else {
-    S.leads.push(lead);
+    S.leads.unshift(lead);
   }
   saveState(); closeModal(); renderLeads();
   if (cur === 'dashboard') renderDash();
@@ -2087,9 +2096,9 @@ function saveCash(id) {
   if (!S.cashEntries) S.cashEntries = [];
   if (id) {
     var idx = -1; S.cashEntries.forEach(function(e,i){ if(e.id===id) idx=i; });
-    if (idx > -1) S.cashEntries[idx] = entry; else S.cashEntries.push(entry);
+    if (idx > -1) S.cashEntries[idx] = entry; else S.cashEntries.unshift(entry);
   } else {
-    S.cashEntries.push(entry);
+    S.cashEntries.unshift(entry);
   }
   saveState(); closeModal(); renderCash(); toast('Payment logged ✓');
 }
