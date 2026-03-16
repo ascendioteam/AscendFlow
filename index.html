@@ -282,7 +282,57 @@ tbody td:first-child{color:var(--text);font-weight:500}
 .pw-wrap input{flex:1;padding-right:38px}
 .pw-eye{position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--text3);padding:0;display:flex;align-items:center;line-height:1;transition:color .15s}
 .pw-eye:hover{color:var(--text)}
+
+/* ===== MOBILE RESPONSIVE ===== */
+.mob-nav-bar{display:none}
+@media(max-width:768px){
+  .app{flex-direction:column}
+  .sidebar{display:none}
+  .main{flex:1;min-height:0}
+  .mob-nav-bar{display:flex;position:fixed;bottom:0;left:0;right:0;height:58px;background:var(--bg2);border-top:1px solid var(--border);z-index:8000;justify-content:space-around;align-items:center;padding:0 4px}
+  .mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;border:none;background:none;color:var(--text3);font-size:9px;font-family:'DM Sans',sans-serif;cursor:pointer;border-radius:8px;flex:1;transition:all .12s;letter-spacing:.02em;text-transform:uppercase;font-weight:500}
+  .mob-nav-btn svg{width:18px;height:18px}
+  .mob-nav-btn.active{color:#fff;background:var(--bg4)}
+  .content{padding:14px 12px 78px}
+  .topbar{padding:0 14px}
+  .tbl-wrap{max-height:none;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .two-col{grid-template-columns:1fr !important}
+  .stats-row{grid-template-columns:1fr 1fr !important}
+  .leads-grid{grid-template-columns:1fr !important}
+  .auth-card{margin:12px;padding:24px 20px}
+  .auth-screen{padding:0;align-items:flex-start;overflow-y:auto}
+  table{min-width:700px}
+}
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr 1fr !important}
+  .topbar .saved-lbl{display:none}
+}
+
+/* ===== ONBOARDING ===== */
+.onboard-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:50000;display:flex;align-items:center;justify-content:center}
+.onboard-overlay.hidden{display:none}
+.onboard-card{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:32px 28px;max-width:420px;width:calc(100% - 32px);position:relative}
+.onboard-step{display:none}
+.onboard-step.active{display:block}
+.onboard-icon{width:48px;height:48px;background:var(--bg4);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.onboard-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.onboard-body{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:22px}
+.onboard-dots{display:flex;gap:6px;margin-bottom:20px}
+.onboard-dot{width:7px;height:7px;border-radius:50%;background:var(--border2);transition:background .2s}
+.onboard-dot.active{background:#fff}
+.onboard-actions{display:flex;align-items:center;justify-content:space-between}
+.onboard-skip{font-size:12px;color:var(--text3);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif}
+.onboard-skip:hover{color:var(--text)}
+.onboard-next{background:#fff;color:#000;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.onboard-next:hover{opacity:.88}
+
+.reset-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:99999;display:none}
+.reset-modal.open{display:flex}
+.reset-box{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:28px 26px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:0}
+.reset-title{font-size:17px;font-weight:700;margin-bottom:4px}
+.reset-sub{font-size:12px;color:var(--text3);margin-bottom:18px}
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <!-- AUTH SCREEN -->
@@ -313,7 +363,7 @@ tbody td:first-child{color:var(--text);font-weight:500}
       <div class="auth-field"><label>Password</label><div class="pw-wrap"><input type="password" id="li-pass" placeholder="Your password" autocomplete="current-password"><button type="button" class="pw-eye" onclick="togglePw('li-pass',this)" tabindex="-1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg></button></div></div>
       <div class="auth-err" id="li-err"></div>
       <button class="auth-btn" onclick="authLogin()">Sign In</button>
-      <div class="auth-switch">New to AscendFlow? <span onclick="authShowSignup()">Create account</span></div>
+      <div class="auth-switch" style="display:flex;justify-content:space-between;align-items:center"><span style="cursor:pointer;color:var(--text3);font-size:12px" onclick="authForgotPassword()">Forgot password?</span><span>New? <span onclick="authShowSignup()">Create account</span></span></div>
     </div>
   </div>
 </div>
@@ -386,6 +436,31 @@ tbody td:first-child{color:var(--text);font-weight:500}
   </div>
 
   <div class="main">
+
+  <!-- MOBILE BOTTOM NAV -->
+  <div class="mob-nav-bar" id="mob-nav-bar">
+    <button class="mob-nav-btn active" id="mob-dashboard" onclick="goTo('dashboard')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+      Dash
+    </button>
+    <button class="mob-nav-btn" id="mob-tracking" onclick="goTo('tracking')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="1.5" width="13" height="13" rx="2"/><line x1="5" y1="1.5" x2="5" y2="14.5"/><line x1="1.5" y1="6" x2="14.5" y2="6"/><line x1="1.5" y1="10" x2="14.5" y2="10"/></svg>
+      Track
+    </button>
+    <button class="mob-nav-btn" id="mob-leads" onclick="goTo('leads')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Leads
+    </button>
+    <button class="mob-nav-btn" id="mob-cash" onclick="goTo('cash')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="3.5" width="13" height="9" rx="2"/><path d="M5 7h6M5 10h4"/></svg>
+      Cash
+    </button>
+    <button class="mob-nav-btn" id="mob-profile" onclick="goTo('profile')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="6" r="2.5"/><path d="M3 13.5c0-2.8 2.2-5 5-5s5 2.2 5 5"/></svg>
+      Profile
+    </button>
+  </div>
+
     <div class="topbar">
       <span class="topbar-title" id="page-title">Dashboard</span>
       <div class="topbar-right">
@@ -408,6 +483,23 @@ tbody td:first-child{color:var(--text);font-weight:500}
             <button class="ttab active" id="ttab-day" onclick="setDashPeriod('day',this)">Day</button>
             <button class="ttab" id="ttab-week" onclick="setDashPeriod('week',this)">Week</button>
             <button class="ttab" id="ttab-month" onclick="setDashPeriod('month',this)">Month</button>
+          </div>
+        </div>
+        <!-- Data safety banner -->
+        <div id="data-safety-banner" style="display:none;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:9px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;color:#fbbf24">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M8 1l7 13H1z"/><line x1="8" y1="6" x2="8" y2="9"/><circle cx="8" cy="11.5" r=".5" fill="currentColor"/></svg>
+          <span>Your data is stored in this browser only. <strong style="cursor:pointer;text-decoration:underline" onclick="goTo('profile')">Export a backup</strong> from Profile to keep it safe.</span>
+          <button onclick="this.parentElement.style.display='none';localStorage.setItem('af_banner_dismissed','1')" style="margin-left:auto;background:none;border:none;color:#fbbf24;cursor:pointer;font-size:16px;line-height:1;padding:0">&times;</button>
+        </div>
+        <!-- Charts row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))" id="dash-charts-row">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Weekly Outreach</span></div>
+            <div style="position:relative;height:130px"><canvas id="chart-outreach"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Conversion Funnel</span></div>
+            <div style="position:relative;height:130px"><canvas id="chart-funnel"></canvas></div>
           </div>
         </div>
         <div class="two-col">
@@ -955,6 +1047,8 @@ function renderDash() {
   }).join('');
 
   renderOfferForm();
+  initSafetyBanner();
+  setTimeout(renderDashCharts, 100);
 }
 
 function renderOfferForm() {
@@ -1158,7 +1252,12 @@ function renderRows() {
   });
   var tb = document.getElementById('sht-body');
   if (!rows.length) {
-    tb.innerHTML = '<tr><td colspan="10" class="tbl-empty">No entries. Click + Add to start tracking.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="10" style="padding:48px 20px;text-align:center;color:var(--text3)">' +
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:10px">' +
+      '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40" style="opacity:.3"><rect x="4" y="4" width="32" height="32" rx="4"/><line x1="4" y1="14" x2="36" y2="14"/><line x1="14" y1="4" x2="14" y2="36"/><line x1="4" y1="23" x2="36" y2="23"/></svg>' +
+      '<div style="font-size:14px;font-weight:500;color:var(--text2)">No contacts yet</div>' +
+      '<div style="font-size:12px">Click <strong style=\"color:var(--text)\">+ Add</strong> to log your first DM and start tracking outreach.</div>' +
+      '</div></td></tr>';
     return;
   }
   tb.innerHTML = rows.map(function(r) {
@@ -2489,52 +2588,75 @@ function togglePw(id, btn) {
     : '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg>';
 }
 // ========== AUTH ==========
-var AUTH_SK = 'ascendflow_auth_v1';   // stores {email, hash, name, role}
-var SESS_SK = 'ascendflow_sess_v1';   // stores {email, expires}
-var SESS_DAYS = 25;
+// ========== SUPABASE ==========
+var SUPA_URL = 'https://vycpdnwnzjkjdvyjpxba.supabase.co';
+var SUPA_KEY = 'sb_publishable_rT7IeDJxdXjtQ3sc2Yh9eA_mZIWNDps';
+var _supa = null;
+var _supaUser = null;
+var _saveTimer = null;
 
-// Simple hash — not cryptographic but prevents plain-text passwords in localStorage
-function hashPass(pass) {
-  var h = 0;
-  var salted = 'AF$2024#' + pass + pass.length;
-  for (var i = 0; i < salted.length; i++) {
-    h = ((h << 5) - h) + salted.charCodeAt(i);
-    h = h & h;
+function getSupabase() {
+  if (!_supa) {
+    _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
   }
-  return 'af_' + Math.abs(h).toString(36) + '_' + salted.length;
+  return _supa;
 }
 
-function authGetUsers() {
-  try { return JSON.parse(localStorage.getItem(AUTH_SK) || '{}'); } catch(e) { return {}; }
-}
-function authSaveUsers(u) {
-  localStorage.setItem(AUTH_SK, JSON.stringify(u));
-}
-function authGetSession() {
-  try { return JSON.parse(localStorage.getItem(SESS_SK) || 'null'); } catch(e) { return null; }
-}
-function authSaveSession(email) {
-  var exp = Date.now() + SESS_DAYS * 24 * 3600 * 1000;
-  localStorage.setItem(SESS_SK, JSON.stringify({email: email, expires: exp}));
-}
-function authClearSession() {
-  localStorage.removeItem(SESS_SK);
+// ── loadState: pull from Supabase (fallback to localStorage) ─────────────────
+function loadState() {
+  try {
+    var raw = localStorage.getItem('ascendflow_v1');
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      for (var k in parsed) { S[k] = parsed[k]; }
+    }
+  } catch(e) {}
 }
 
-function authIsLoggedIn() {
-  var sess = authGetSession();
-  if (!sess) return false;
-  if (Date.now() > sess.expires) { authClearSession(); return false; }
-  return true;
+async function loadStateFromSupabase() {
+  var sb = getSupabase();
+  var uid = _supaUser ? _supaUser.id : null;
+  if (!uid) return;
+  try {
+    var res = await sb.from('user_data').select('data').eq('user_id', uid).single();
+    if (res.data && res.data.data) {
+      var parsed = res.data.data;
+      for (var k in parsed) { S[k] = parsed[k]; }
+    }
+  } catch(e) { console.log('load err', e); }
 }
 
-function authGetCurrentUser() {
-  var sess = authGetSession();
-  if (!sess) return null;
-  var users = authGetUsers();
-  return users[sess.email] || null;
+// ── saveState: write to Supabase + localStorage ────────────────────────────
+function saveState() {
+  // Always save locally as instant backup
+  try { localStorage.setItem('ascendflow_v1', JSON.stringify(S)); } catch(e) {}
+  var el = document.getElementById('saved-lbl');
+  if (el) el.textContent = 'Saving...';
+  // Debounce cloud save by 800ms to avoid hammering on rapid edits
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(function() { saveStateToSupabase(); }, 800);
 }
 
+async function saveStateToSupabase() {
+  var sb = getSupabase();
+  var uid = _supaUser ? _supaUser.id : null;
+  if (!uid) return;
+  try {
+    await sb.from('user_data').upsert({
+      user_id: uid,
+      data: S,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+    var el = document.getElementById('saved-lbl');
+    if (el) el.textContent = 'Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    var el = document.getElementById('saved-lbl');
+    if (el) el.textContent = 'Saved locally';
+    console.log('cloud save err', e);
+  }
+}
+
+// ── Auth UI helpers ───────────────────────────────────────────────────────────
 function authShowLogin() {
   document.getElementById('auth-signup').style.display = 'none';
   document.getElementById('auth-login').style.display = 'block';
@@ -2549,70 +2671,113 @@ function authShowSignup() {
   setTimeout(function(){ var el = document.getElementById('su-name'); if(el) el.focus(); }, 50);
 }
 
-function authSignup() {
+// ── Signup ────────────────────────────────────────────────────────────────────
+async function authSignup() {
   var name  = (document.getElementById('su-name').value || '').trim();
   var email = (document.getElementById('su-email').value || '').trim().toLowerCase();
   var pass  = document.getElementById('su-pass').value;
   var pass2 = document.getElementById('su-pass2').value;
   var err   = document.getElementById('su-err');
+  var btn   = document.querySelector('#auth-signup .auth-btn');
 
   if (!name)  { err.textContent = 'Name is required'; return; }
   if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { err.textContent = 'Enter a valid email'; return; }
   if (pass.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
   if (pass !== pass2)  { err.textContent = 'Passwords do not match'; return; }
 
-  var users = authGetUsers();
-  if (users[email]) { err.textContent = 'An account with this email already exists'; return; }
+  err.textContent = '';
+  btn.textContent = 'Creating account...';
+  btn.disabled = true;
 
-  users[email] = { name: name, email: email, hash: hashPass(pass), createdAt: Date.now() };
-  authSaveUsers(users);
+  var sb = getSupabase();
+  var res = await sb.auth.signUp({
+    email: email,
+    password: pass,
+    options: { data: { full_name: name } }
+  });
 
-  // Pre-fill profile with signup info
-  S.profile.name    = name;
-  S.profile.email   = email;
-  saveState();
+  btn.textContent = 'Create Account';
+  btn.disabled = false;
 
-  authSaveSession(email);
-  authEnter(users[email]);
+  if (res.error) {
+    err.textContent = res.error.message;
+    return;
+  }
+
+  // Auto sign in after signup (email confirmation disabled for smooth UX)
+  _supaUser = res.data.user || (res.data.session ? res.data.session.user : null);
+  if (_supaUser) {
+    S.profile.name  = name;
+    S.profile.email = email;
+    await saveStateToSupabase();
+    authEnter({ name: name, email: email });
+  } else {
+    // Email confirmation required
+    err.style.color = '#4ade80';
+    err.textContent = 'Check your email to confirm your account, then sign in.';
+  }
 }
 
-function authLogin() {
+// ── Login ─────────────────────────────────────────────────────────────────────
+async function authLogin() {
   var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
   var pass  = document.getElementById('li-pass').value;
   var err   = document.getElementById('li-err');
+  var btn   = document.querySelector('#auth-login .auth-btn');
 
   if (!email) { err.textContent = 'Email is required'; return; }
   if (!pass)  { err.textContent = 'Password is required'; return; }
 
-  var users = authGetUsers();
-  var user  = users[email];
-  if (!user) { err.textContent = 'No account found with that email'; return; }
-  if (user.hash !== hashPass(pass)) { err.textContent = 'Incorrect password'; return; }
+  err.textContent = '';
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
 
-  authSaveSession(email);
-  authEnter(user);
+  var sb = getSupabase();
+  var res = await sb.auth.signInWithPassword({ email: email, password: pass });
+
+  btn.textContent = 'Sign In';
+  btn.disabled = false;
+
+  if (res.error) {
+    err.textContent = res.error.message === 'Invalid login credentials'
+      ? 'Incorrect email or password'
+      : res.error.message;
+    return;
+  }
+
+  _supaUser = res.data.user;
+  await loadStateFromSupabase();
+  authEnter({ name: _supaUser.user_metadata.full_name || email, email: email });
 }
 
+// ── Enter app ─────────────────────────────────────────────────────────────────
 function authEnter(user) {
-  // Sync profile name/role/email from auth user if profile is empty
   if (!S.profile.name  && user.name)  S.profile.name  = user.name;
   if (!S.profile.email && user.email) S.profile.email = user.email;
-  saveState();
 
-  // Update the user pill in sidebar
   var pill = document.getElementById('user-pill-name');
   if (pill) pill.textContent = user.name || user.email;
 
-  // Hide auth screen
   document.getElementById('auth-screen').classList.add('hidden');
-
-  // Render app
   renderDash();
+  setTimeout(function() {
+    initOnboard();
+    requestNotifPermission();
+  }, 500);
+  setInterval(checkFollowupNotifs, 600000);
 }
 
-function authLogout() {
-  authClearSession();
-  // Show login panel
+// ── Logout ────────────────────────────────────────────────────────────────────
+async function authLogout() {
+  var sb = getSupabase();
+  await sb.auth.signOut();
+  _supaUser = null;
+  // Reset state
+  S = { profile:{name:'',role:'',email:'',booking:'',notes:'',avatar:''},
+        offer:{name:'',desc:'',pmin:'',pmax:'',dur:'',del:'',forWho:'',pay:'',guarantee:'',deliverables:[],objections:[]},
+        eod:{tasks:[],lastReset:''},timeFmt:'12',rows:[],leads:[],events:[],
+        statuses:['New','Qualified','Unqualified','Follow-up','Closed','Booked','Discovery','Ghosted'],
+        scripts:[],cashEntries:[],uid:1 };
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('auth-signup').style.display = 'none';
   document.getElementById('auth-login').style.display = 'block';
@@ -2621,25 +2786,90 @@ function authLogout() {
   document.getElementById('li-err').textContent = '';
 }
 
-function authBoot() {
-  loadState();
-  if (authIsLoggedIn()) {
-    var user = authGetCurrentUser();
-    if (user) {
-      authEnter(user);
-      return;
-    }
-  }
-  // Not logged in — check if any account exists
-  var users = authGetUsers();
-  var hasAccounts = Object.keys(users).length > 0;
-  if (hasAccounts) {
-    authShowLogin();
+// ── Forgot password (real email reset via Supabase) ───────────────────────────
+async function authForgotPassword() {
+  var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
+  var err = document.getElementById('li-err');
+  if (!email) { err.textContent = 'Enter your email first'; return; }
+  var sb = getSupabase();
+  err.textContent = 'Sending reset email...';
+  err.style.color = '#888';
+  var res = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://ascendioteam.github.io/AscendFlow/'
+  });
+  if (res.error) {
+    err.style.color = '#f87171';
+    err.textContent = res.error.message;
   } else {
-    authShowSignup();
+    err.style.color = '#4ade80';
+    err.textContent = 'Password reset email sent! Check your inbox.';
   }
-  // auth screen is already visible by default
 }
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+async function authBoot() {
+  loadState(); // load local backup first for instant render
+  var sb = getSupabase();
+
+  // Check for existing session
+  var sessionRes = await sb.auth.getSession();
+  var session = sessionRes.data.session;
+
+  if (session && session.user) {
+    _supaUser = session.user;
+    await loadStateFromSupabase();
+    var name = _supaUser.user_metadata.full_name || _supaUser.email;
+    authEnter({ name: name, email: _supaUser.email });
+    return;
+  }
+
+  // No session — show auth screen
+  authShowSignup();
+}
+
+// Keep session fresh — listen for auth state changes
+function initSupabaseAuthListener() {
+  var sb = getSupabase();
+  sb.auth.onAuthStateChange(function(event, session) {
+    if (event === 'SIGNED_OUT') {
+      _supaUser = null;
+    }
+    if (event === 'TOKEN_REFRESHED' && session) {
+      _supaUser = session.user;
+    }
+    if (event === 'PASSWORD_RECOVERY' && session) {
+      // User clicked reset link — show password update modal
+      _supaUser = session.user;
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('reset-modal').classList.add('open');
+      document.getElementById('reset-email-display').textContent = 'Enter your new password.';
+      setTimeout(function(){ document.getElementById('reset-pass').focus(); }, 80);
+    }
+  });
+}
+
+// Override submitResetPassword to use Supabase when in recovery mode
+async function submitResetPasswordSupabase(p1, p2) {
+  var err = document.getElementById('reset-err');
+  err.style.color = '#f87171';
+  if (p1.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
+  if (p1 !== p2) { err.textContent = 'Passwords do not match'; return; }
+  var sb = getSupabase();
+  var res = await sb.auth.updateUser({ password: p1 });
+  if (res.error) { err.textContent = res.error.message; return; }
+  closeResetModal();
+  // Load data and enter app
+  var sessionRes = await sb.auth.getSession();
+  if (sessionRes.data.session) {
+    _supaUser = sessionRes.data.session.user;
+    await loadStateFromSupabase();
+    authEnter({ name: _supaUser.user_metadata.full_name || _supaUser.email, email: _supaUser.email });
+  }
+  toast('Password updated successfully ✓');
+}
+
+// Patch submitResetPassword to handle both modes
+var _origSubmitReset = null;
 
 // Enter key support on auth inputs
 document.addEventListener('keydown', function(e) {
@@ -2650,13 +2880,269 @@ document.addEventListener('keydown', function(e) {
   if (loginVisible) { authLogin(); } else { authSignup(); }
 });
 
+
+// ========== ONBOARDING ==========
+var ONBOARD_KEY = 'af_onboarded_v1';
+var _onboardStep = 0;
+var _onboardTotal = 4;
+
+function initOnboard() {
+  if (localStorage.getItem(ONBOARD_KEY)) return;
+  _onboardStep = 0;
+  renderOnboardDots();
+  document.getElementById('onboard-overlay').classList.remove('hidden');
+}
+
+function renderOnboardDots() {
+  var dots = document.getElementById('onboard-dots');
+  var html = '';
+  for (var i = 0; i < _onboardTotal; i++) {
+    html += '<div class="onboard-dot' + (i === _onboardStep ? ' active' : '') + '"></div>';
+  }
+  dots.innerHTML = html;
+  var btn = document.getElementById('onboard-next-btn');
+  btn.textContent = _onboardStep === _onboardTotal - 1 ? 'Get started' : 'Next →';
+}
+
+function nextOnboard() {
+  document.getElementById('onboard-step-' + _onboardStep).classList.remove('active');
+  _onboardStep++;
+  if (_onboardStep >= _onboardTotal) {
+    skipOnboard();
+    return;
+  }
+  document.getElementById('onboard-step-' + _onboardStep).classList.add('active');
+  renderOnboardDots();
+}
+
+function skipOnboard() {
+  localStorage.setItem(ONBOARD_KEY, '1');
+  document.getElementById('onboard-overlay').classList.add('hidden');
+}
+
+// ========== DATA SAFETY BANNER ==========
+function initSafetyBanner() {
+  if (localStorage.getItem('af_banner_dismissed')) return;
+  if (S.rows.length > 0 || S.leads.length > 0 || S.cashEntries.length > 0) {
+    var el = document.getElementById('data-safety-banner');
+    if (el) el.style.display = 'flex';
+  }
+}
+
+// ========== DASHBOARD CHARTS ==========
+var _chartsRendered = false;
+
+function renderDashCharts() {
+  if (typeof Chart === 'undefined') return;
+
+  // Weekly outreach bar chart
+  var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var today = new Date();
+  var weekData = [0,0,0,0,0,0,0];
+  S.rows.forEach(function(r) {
+    if (!r.date) return;
+    var d = new Date(r.date + 'T12:00:00');
+    var diff = Math.floor((today - d) / 86400000);
+    if (diff >= 0 && diff < 7) {
+      var dayIdx = d.getDay();
+      weekData[dayIdx]++;
+    }
+  });
+
+  var c1 = document.getElementById('chart-outreach');
+  if (!c1) return;
+  if (c1._chart) c1._chart.destroy();
+  c1._chart = new Chart(c1.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: [{
+        data: weekData,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderColor: 'rgba(255,255,255,0.5)',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 }, stepSize: 1 }, beginAtZero: true }
+      }
+    }
+  });
+
+  // Conversion funnel horizontal bar
+  var tracked = S.rows.length;
+  var leads = S.leads.length;
+  var booked = S.rows.filter(function(r){ return r.status === 'Booked'; }).length + S.leads.filter(function(l){ return l.status === 'Booked'; }).length;
+  var closed = (S.cashEntries || []).length;
+
+  var c2 = document.getElementById('chart-funnel');
+  if (!c2) return;
+  if (c2._chart) c2._chart.destroy();
+  c2._chart = new Chart(c2.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Tracked','Leads','Booked','Closed'],
+      datasets: [{
+        data: [tracked, leads, booked, closed],
+        backgroundColor: ['rgba(99,102,241,0.7)','rgba(139,92,246,0.7)','rgba(34,197,94,0.7)','rgba(251,191,36,0.7)'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 }, stepSize: 1 }, beginAtZero: true },
+        y: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// ========== BROWSER NOTIFICATIONS ==========
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function checkFollowupNotifs() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  var now = Date.now();
+  S.rows.forEach(function(r) {
+    if (!r.followupTimes) return;
+    var lastChecked = -1;
+    if (r.followupTimes[0] && !r.followupTimes[1]) lastChecked = 0;
+    else if (r.followupTimes[1] && !r.followupTimes[2]) lastChecked = 1;
+    if (lastChecked < 0) return;
+    var t = r.followupTimes[lastChecked];
+    var elapsed = now - t;
+    var notifKey = 'af_notif_' + r.id + '_' + lastChecked;
+    if (elapsed >= 48*3600*1000 && !localStorage.getItem(notifKey)) {
+      localStorage.setItem(notifKey, '1');
+      new Notification('AscendFlow — Followup Due', {
+        body: r.name + ' is ready for ' + (lastChecked === 0 ? 'F1' : 'F2'),
+        icon: ''
+      });
+    }
+  });
+}
+
+// ========== PASSWORD RECOVERY ==========
+var _resetEmail = '';
+
+// authForgotPassword — handled by async Supabase version above
+
+function closeResetModal() {
+  document.getElementById('reset-modal').classList.remove('open');
+  _resetEmail = '';
+}
+function closeResetModalBackdrop(el, e) {
+  if (e.target === el) closeResetModal();
+}
+
+function submitResetPassword() {
+  var p1 = document.getElementById('reset-pass').value;
+  var p2 = document.getElementById('reset-pass2').value;
+  // If we have a supaUser (from PASSWORD_RECOVERY flow), use Supabase
+  if (_supaUser) {
+    submitResetPasswordSupabase(p1, p2);
+    return;
+  }
+  var err = document.getElementById('reset-err');
+  err.style.color = '#f87171';
+  if (p1.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
+  if (p1 !== p2) { err.textContent = 'Passwords do not match'; return; }
+  closeResetModal();
+  document.getElementById('li-err').style.color = '#4ade80';
+  document.getElementById('li-err').textContent = 'Password updated. You can now sign in.';
+}
+
 // ========== BOOT ==========
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+  s.onload = function() { if (typeof renderDashCharts === 'function' && cur === 'dashboard') renderDashCharts(); };
+  document.head.appendChild(s);
+})();
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", authBoot);
+  document.addEventListener("DOMContentLoaded", function() {
+    initSupabaseAuthListener();
+    authBoot();
+  });
 } else {
+  initSupabaseAuthListener();
   authBoot();
 }
 
 </script>
+
+<!-- ONBOARDING OVERLAY -->
+<div class="onboard-overlay hidden" id="onboard-overlay">
+  <div class="onboard-card">
+    <div class="onboard-dots" id="onboard-dots"></div>
+    <!-- Step 1 -->
+    <div class="onboard-step active" id="onboard-step-0">
+      <div class="onboard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <div class="onboard-title">Welcome to AscendFlow</div>
+      <div class="onboard-body">Your personal CRM built for appointment setters. Track outreach, manage leads, log cash and stay on top of followups — all in one place. Let us show you around in 4 quick steps.</div>
+    </div>
+    <!-- Step 2 -->
+    <div class="onboard-step" id="onboard-step-1">
+      <div class="onboard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="8" y1="2" x2="8" y2="22"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="2" y1="15" x2="22" y2="15"/></svg></div>
+      <div class="onboard-title">Tracking Sheet</div>
+      <div class="onboard-body">Every DM you send goes here. Log the name, platform (LinkedIn, IG, X), pain point and status. Check off C, F1, F2 as you follow up — the app auto-tracks timing and warns you when 48hrs is up. Hot prospects? Hit the arrow to push them to Leads.</div>
+    </div>
+    <!-- Step 3 -->
+    <div class="onboard-step" id="onboard-step-2">
+      <div class="onboard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+      <div class="onboard-title">Leads and Cash</div>
+      <div class="onboard-body">Qualified prospects graduate to the Leads tab where you track them through to close. When a deal lands, log it in Cash Collected — AscendFlow keeps a running total of your commissions so you always know your numbers.</div>
+    </div>
+    <!-- Step 4 -->
+    <div class="onboard-step" id="onboard-step-3">
+      <div class="onboard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="onboard-title">One last thing</div>
+      <div class="onboard-body">Your data is saved locally in your browser right now. Export a backup regularly from the Profile page to keep it safe. Now go log your first DM and start stacking those bookings.</div>
+    </div>
+    <div class="onboard-actions">
+      <button class="onboard-skip" onclick="skipOnboard()">Skip tour</button>
+      <button class="onboard-next" id="onboard-next-btn" onclick="nextOnboard()">Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- RESET PASSWORD MODAL -->
+<div class="reset-modal" id="reset-modal" onclick="closeResetModalBackdrop(this,event)">
+  <div class="reset-box">
+    <div class="reset-title">Reset Password</div>
+    <div class="reset-sub" id="reset-email-display">Enter a new password for your account.</div>
+    <div class="auth-field">
+      <label>New Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="reset-pass" placeholder="Min 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitResetPassword()">
+        <button type="button" class="pw-eye" onclick="togglePw('reset-pass',this)" tabindex="-1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg></button>
+      </div>
+    </div>
+    <div class="auth-field">
+      <label>Confirm New Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="reset-pass2" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitResetPassword()">
+        <button type="button" class="pw-eye" onclick="togglePw('reset-pass2',this)" tabindex="-1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg></button>
+      </div>
+    </div>
+    <div class="auth-err" id="reset-err" style="margin-bottom:12px"></div>
+    <button class="auth-btn" onclick="submitResetPassword()">Update Password</button>
+    <button onclick="closeResetModal()" style="margin-top:10px;background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancel</button>
+  </div>
+</div>
+
 </body>
 </html>
