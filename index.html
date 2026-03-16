@@ -325,14 +325,7 @@ tbody td:first-child{color:var(--text);font-weight:500}
 .onboard-skip:hover{color:var(--text)}
 .onboard-next{background:#fff;color:#000;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s}
 .onboard-next:hover{opacity:.88}
-
-.reset-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:99999;display:none}
-.reset-modal.open{display:flex}
-.reset-box{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:28px 26px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:0}
-.reset-title{font-size:17px;font-weight:700;margin-bottom:4px}
-.reset-sub{font-size:12px;color:var(--text3);margin-bottom:18px}
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <!-- AUTH SCREEN -->
@@ -2588,75 +2581,52 @@ function togglePw(id, btn) {
     : '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg>';
 }
 // ========== AUTH ==========
-// ========== SUPABASE ==========
-var SUPA_URL = 'https://vycpdnwnzjkjdvyjpxba.supabase.co';
-var SUPA_KEY = 'sb_publishable_rT7IeDJxdXjtQ3sc2Yh9eA_mZIWNDps';
-var _supa = null;
-var _supaUser = null;
-var _saveTimer = null;
+var AUTH_SK = 'ascendflow_auth_v1';   // stores {email, hash, name, role}
+var SESS_SK = 'ascendflow_sess_v1';   // stores {email, expires}
+var SESS_DAYS = 25;
 
-function getSupabase() {
-  if (!_supa) {
-    _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+// Simple hash — not cryptographic but prevents plain-text passwords in localStorage
+function hashPass(pass) {
+  var h = 0;
+  var salted = 'AF$2024#' + pass + pass.length;
+  for (var i = 0; i < salted.length; i++) {
+    h = ((h << 5) - h) + salted.charCodeAt(i);
+    h = h & h;
   }
-  return _supa;
+  return 'af_' + Math.abs(h).toString(36) + '_' + salted.length;
 }
 
-// ── loadState: pull from Supabase (fallback to localStorage) ─────────────────
-function loadState() {
-  try {
-    var raw = localStorage.getItem('ascendflow_v1');
-    if (raw) {
-      var parsed = JSON.parse(raw);
-      for (var k in parsed) { S[k] = parsed[k]; }
-    }
-  } catch(e) {}
+function authGetUsers() {
+  try { return JSON.parse(localStorage.getItem(AUTH_SK) || '{}'); } catch(e) { return {}; }
+}
+function authSaveUsers(u) {
+  localStorage.setItem(AUTH_SK, JSON.stringify(u));
+}
+function authGetSession() {
+  try { return JSON.parse(localStorage.getItem(SESS_SK) || 'null'); } catch(e) { return null; }
+}
+function authSaveSession(email) {
+  var exp = Date.now() + SESS_DAYS * 24 * 3600 * 1000;
+  localStorage.setItem(SESS_SK, JSON.stringify({email: email, expires: exp}));
+}
+function authClearSession() {
+  localStorage.removeItem(SESS_SK);
 }
 
-async function loadStateFromSupabase() {
-  var sb = getSupabase();
-  var uid = _supaUser ? _supaUser.id : null;
-  if (!uid) return;
-  try {
-    var res = await sb.from('user_data').select('data').eq('user_id', uid).single();
-    if (res.data && res.data.data) {
-      var parsed = res.data.data;
-      for (var k in parsed) { S[k] = parsed[k]; }
-    }
-  } catch(e) { console.log('load err', e); }
+function authIsLoggedIn() {
+  var sess = authGetSession();
+  if (!sess) return false;
+  if (Date.now() > sess.expires) { authClearSession(); return false; }
+  return true;
 }
 
-// ── saveState: write to Supabase + localStorage ────────────────────────────
-function saveState() {
-  // Always save locally as instant backup
-  try { localStorage.setItem('ascendflow_v1', JSON.stringify(S)); } catch(e) {}
-  var el = document.getElementById('saved-lbl');
-  if (el) el.textContent = 'Saving...';
-  // Debounce cloud save by 800ms to avoid hammering on rapid edits
-  clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(function() { saveStateToSupabase(); }, 800);
+function authGetCurrentUser() {
+  var sess = authGetSession();
+  if (!sess) return null;
+  var users = authGetUsers();
+  return users[sess.email] || null;
 }
 
-async function saveStateToSupabase() {
-  var sb = getSupabase();
-  var uid = _supaUser ? _supaUser.id : null;
-  if (!uid) return;
-  try {
-    await sb.from('user_data').upsert({
-      user_id: uid,
-      data: S,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id' });
-    var el = document.getElementById('saved-lbl');
-    if (el) el.textContent = 'Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  } catch(e) {
-    var el = document.getElementById('saved-lbl');
-    if (el) el.textContent = 'Saved locally';
-    console.log('cloud save err', e);
-  }
-}
-
-// ── Auth UI helpers ───────────────────────────────────────────────────────────
 function authShowLogin() {
   document.getElementById('auth-signup').style.display = 'none';
   document.getElementById('auth-login').style.display = 'block';
@@ -2671,113 +2641,76 @@ function authShowSignup() {
   setTimeout(function(){ var el = document.getElementById('su-name'); if(el) el.focus(); }, 50);
 }
 
-// ── Signup ────────────────────────────────────────────────────────────────────
-async function authSignup() {
+function authSignup() {
   var name  = (document.getElementById('su-name').value || '').trim();
   var email = (document.getElementById('su-email').value || '').trim().toLowerCase();
   var pass  = document.getElementById('su-pass').value;
   var pass2 = document.getElementById('su-pass2').value;
   var err   = document.getElementById('su-err');
-  var btn   = document.querySelector('#auth-signup .auth-btn');
 
   if (!name)  { err.textContent = 'Name is required'; return; }
   if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { err.textContent = 'Enter a valid email'; return; }
   if (pass.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
   if (pass !== pass2)  { err.textContent = 'Passwords do not match'; return; }
 
-  err.textContent = '';
-  btn.textContent = 'Creating account...';
-  btn.disabled = true;
+  var users = authGetUsers();
+  if (users[email]) { err.textContent = 'An account with this email already exists'; return; }
 
-  var sb = getSupabase();
-  var res = await sb.auth.signUp({
-    email: email,
-    password: pass,
-    options: { data: { full_name: name } }
-  });
+  users[email] = { name: name, email: email, hash: hashPass(pass), createdAt: Date.now() };
+  authSaveUsers(users);
 
-  btn.textContent = 'Create Account';
-  btn.disabled = false;
+  // Pre-fill profile with signup info
+  S.profile.name    = name;
+  S.profile.email   = email;
+  saveState();
 
-  if (res.error) {
-    err.textContent = res.error.message;
-    return;
-  }
-
-  // Auto sign in after signup (email confirmation disabled for smooth UX)
-  _supaUser = res.data.user || (res.data.session ? res.data.session.user : null);
-  if (_supaUser) {
-    S.profile.name  = name;
-    S.profile.email = email;
-    await saveStateToSupabase();
-    authEnter({ name: name, email: email });
-  } else {
-    // Email confirmation required
-    err.style.color = '#4ade80';
-    err.textContent = 'Check your email to confirm your account, then sign in.';
-  }
+  authSaveSession(email);
+  authEnter(users[email]);
 }
 
-// ── Login ─────────────────────────────────────────────────────────────────────
-async function authLogin() {
+function authLogin() {
   var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
   var pass  = document.getElementById('li-pass').value;
   var err   = document.getElementById('li-err');
-  var btn   = document.querySelector('#auth-login .auth-btn');
 
   if (!email) { err.textContent = 'Email is required'; return; }
   if (!pass)  { err.textContent = 'Password is required'; return; }
 
-  err.textContent = '';
-  btn.textContent = 'Signing in...';
-  btn.disabled = true;
+  var users = authGetUsers();
+  var user  = users[email];
+  if (!user) { err.textContent = 'No account found with that email'; return; }
+  if (user.hash !== hashPass(pass)) { err.textContent = 'Incorrect password'; return; }
 
-  var sb = getSupabase();
-  var res = await sb.auth.signInWithPassword({ email: email, password: pass });
-
-  btn.textContent = 'Sign In';
-  btn.disabled = false;
-
-  if (res.error) {
-    err.textContent = res.error.message === 'Invalid login credentials'
-      ? 'Incorrect email or password'
-      : res.error.message;
-    return;
-  }
-
-  _supaUser = res.data.user;
-  await loadStateFromSupabase();
-  authEnter({ name: _supaUser.user_metadata.full_name || email, email: email });
+  authSaveSession(email);
+  authEnter(user);
 }
 
-// ── Enter app ─────────────────────────────────────────────────────────────────
 function authEnter(user) {
+  // Sync profile name/role/email from auth user if profile is empty
   if (!S.profile.name  && user.name)  S.profile.name  = user.name;
   if (!S.profile.email && user.email) S.profile.email = user.email;
+  saveState();
 
+  // Update the user pill in sidebar
   var pill = document.getElementById('user-pill-name');
   if (pill) pill.textContent = user.name || user.email;
 
+  // Hide auth screen
   document.getElementById('auth-screen').classList.add('hidden');
+
+  // Render app
   renderDash();
   setTimeout(function() {
     initOnboard();
     requestNotifPermission();
   }, 500);
+  // Start followup notif check every 10 min
   setInterval(checkFollowupNotifs, 600000);
 }
 
-// ── Logout ────────────────────────────────────────────────────────────────────
-async function authLogout() {
-  var sb = getSupabase();
-  await sb.auth.signOut();
-  _supaUser = null;
-  // Reset state
-  S = { profile:{name:'',role:'',email:'',booking:'',notes:'',avatar:''},
-        offer:{name:'',desc:'',pmin:'',pmax:'',dur:'',del:'',forWho:'',pay:'',guarantee:'',deliverables:[],objections:[]},
-        eod:{tasks:[],lastReset:''},timeFmt:'12',rows:[],leads:[],events:[],
-        statuses:['New','Qualified','Unqualified','Follow-up','Closed','Booked','Discovery','Ghosted'],
-        scripts:[],cashEntries:[],uid:1 };
+function authLogout() {
+  authClearSession();
+  // Show login panel
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('auth-signup').style.display = 'none';
   document.getElementById('auth-login').style.display = 'block';
@@ -2786,90 +2719,25 @@ async function authLogout() {
   document.getElementById('li-err').textContent = '';
 }
 
-// ── Forgot password (real email reset via Supabase) ───────────────────────────
-async function authForgotPassword() {
-  var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
-  var err = document.getElementById('li-err');
-  if (!email) { err.textContent = 'Enter your email first'; return; }
-  var sb = getSupabase();
-  err.textContent = 'Sending reset email...';
-  err.style.color = '#888';
-  var res = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://ascendioteam.github.io/AscendFlow/'
-  });
-  if (res.error) {
-    err.style.color = '#f87171';
-    err.textContent = res.error.message;
+function authBoot() {
+  loadState();
+  if (authIsLoggedIn()) {
+    var user = authGetCurrentUser();
+    if (user) {
+      authEnter(user);
+      return;
+    }
+  }
+  // Not logged in — check if any account exists
+  var users = authGetUsers();
+  var hasAccounts = Object.keys(users).length > 0;
+  if (hasAccounts) {
+    authShowLogin();
   } else {
-    err.style.color = '#4ade80';
-    err.textContent = 'Password reset email sent! Check your inbox.';
+    authShowSignup();
   }
+  // auth screen is already visible by default
 }
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
-async function authBoot() {
-  loadState(); // load local backup first for instant render
-  var sb = getSupabase();
-
-  // Check for existing session
-  var sessionRes = await sb.auth.getSession();
-  var session = sessionRes.data.session;
-
-  if (session && session.user) {
-    _supaUser = session.user;
-    await loadStateFromSupabase();
-    var name = _supaUser.user_metadata.full_name || _supaUser.email;
-    authEnter({ name: name, email: _supaUser.email });
-    return;
-  }
-
-  // No session — show auth screen
-  authShowSignup();
-}
-
-// Keep session fresh — listen for auth state changes
-function initSupabaseAuthListener() {
-  var sb = getSupabase();
-  sb.auth.onAuthStateChange(function(event, session) {
-    if (event === 'SIGNED_OUT') {
-      _supaUser = null;
-    }
-    if (event === 'TOKEN_REFRESHED' && session) {
-      _supaUser = session.user;
-    }
-    if (event === 'PASSWORD_RECOVERY' && session) {
-      // User clicked reset link — show password update modal
-      _supaUser = session.user;
-      document.getElementById('auth-screen').classList.add('hidden');
-      document.getElementById('reset-modal').classList.add('open');
-      document.getElementById('reset-email-display').textContent = 'Enter your new password.';
-      setTimeout(function(){ document.getElementById('reset-pass').focus(); }, 80);
-    }
-  });
-}
-
-// Override submitResetPassword to use Supabase when in recovery mode
-async function submitResetPasswordSupabase(p1, p2) {
-  var err = document.getElementById('reset-err');
-  err.style.color = '#f87171';
-  if (p1.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
-  if (p1 !== p2) { err.textContent = 'Passwords do not match'; return; }
-  var sb = getSupabase();
-  var res = await sb.auth.updateUser({ password: p1 });
-  if (res.error) { err.textContent = res.error.message; return; }
-  closeResetModal();
-  // Load data and enter app
-  var sessionRes = await sb.auth.getSession();
-  if (sessionRes.data.session) {
-    _supaUser = sessionRes.data.session.user;
-    await loadStateFromSupabase();
-    authEnter({ name: _supaUser.user_metadata.full_name || _supaUser.email, email: _supaUser.email });
-  }
-  toast('Password updated successfully ✓');
-}
-
-// Patch submitResetPassword to handle both modes
-var _origSubmitReset = null;
 
 // Enter key support on auth inputs
 document.addEventListener('keydown', function(e) {
@@ -3035,31 +2903,16 @@ function checkFollowupNotifs() {
 }
 
 // ========== PASSWORD RECOVERY ==========
-var _resetEmail = '';
-
-// authForgotPassword — handled by async Supabase version above
-
-function closeResetModal() {
-  document.getElementById('reset-modal').classList.remove('open');
-  _resetEmail = '';
-}
-function closeResetModalBackdrop(el, e) {
-  if (e.target === el) closeResetModal();
-}
-
-function submitResetPassword() {
-  var p1 = document.getElementById('reset-pass').value;
-  var p2 = document.getElementById('reset-pass2').value;
-  // If we have a supaUser (from PASSWORD_RECOVERY flow), use Supabase
-  if (_supaUser) {
-    submitResetPasswordSupabase(p1, p2);
-    return;
-  }
-  var err = document.getElementById('reset-err');
-  err.style.color = '#f87171';
-  if (p1.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
-  if (p1 !== p2) { err.textContent = 'Passwords do not match'; return; }
-  closeResetModal();
+function authForgotPassword() {
+  var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
+  if (!email) { document.getElementById('li-err').textContent = 'Enter your email first'; return; }
+  var users = authGetUsers();
+  var user = users[email];
+  if (!user) { document.getElementById('li-err').textContent = 'No account found with that email'; return; }
+  var newPass = prompt('Enter a new password (min 6 characters):');
+  if (!newPass || newPass.length < 6) { document.getElementById('li-err').textContent = 'Password must be at least 6 characters'; return; }
+  users[email].hash = hashPass(newPass);
+  authSaveUsers(users);
   document.getElementById('li-err').style.color = '#4ade80';
   document.getElementById('li-err').textContent = 'Password updated. You can now sign in.';
 }
@@ -3072,12 +2925,8 @@ function submitResetPassword() {
   document.head.appendChild(s);
 })();
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", function() {
-    initSupabaseAuthListener();
-    authBoot();
-  });
+  document.addEventListener("DOMContentLoaded", authBoot);
 } else {
-  initSupabaseAuthListener();
   authBoot();
 }
 
@@ -3115,32 +2964,6 @@ if (document.readyState === "loading") {
       <button class="onboard-skip" onclick="skipOnboard()">Skip tour</button>
       <button class="onboard-next" id="onboard-next-btn" onclick="nextOnboard()">Next &rarr;</button>
     </div>
-  </div>
-</div>
-
-
-<!-- RESET PASSWORD MODAL -->
-<div class="reset-modal" id="reset-modal" onclick="closeResetModalBackdrop(this,event)">
-  <div class="reset-box">
-    <div class="reset-title">Reset Password</div>
-    <div class="reset-sub" id="reset-email-display">Enter a new password for your account.</div>
-    <div class="auth-field">
-      <label>New Password</label>
-      <div class="pw-wrap">
-        <input type="password" id="reset-pass" placeholder="Min 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitResetPassword()">
-        <button type="button" class="pw-eye" onclick="togglePw('reset-pass',this)" tabindex="-1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg></button>
-      </div>
-    </div>
-    <div class="auth-field">
-      <label>Confirm New Password</label>
-      <div class="pw-wrap">
-        <input type="password" id="reset-pass2" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitResetPassword()">
-        <button type="button" class="pw-eye" onclick="togglePw('reset-pass2',this)" tabindex="-1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg></button>
-      </div>
-    </div>
-    <div class="auth-err" id="reset-err" style="margin-bottom:12px"></div>
-    <button class="auth-btn" onclick="submitResetPassword()">Update Password</button>
-    <button onclick="closeResetModal()" style="margin-top:10px;background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancel</button>
   </div>
 </div>
 
