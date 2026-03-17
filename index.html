@@ -307,7 +307,6 @@ tbody td:first-child{color:var(--text);font-weight:500}
   .stats-row{grid-template-columns:1fr 1fr !important}
   .topbar .saved-lbl{display:none}
 }
-
 /* ===== ONBOARDING ===== */
 .onboard-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:50000;display:flex;align-items:center;justify-content:center}
 .onboard-overlay.hidden{display:none}
@@ -325,6 +324,47 @@ tbody td:first-child{color:var(--text);font-weight:500}
 .onboard-skip:hover{color:var(--text)}
 .onboard-next{background:#fff;color:#000;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s}
 .onboard-next:hover{opacity:.88}
+/* ===== RESET PASSWORD MODAL ===== */
+.reset-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;z-index:99999}
+.reset-modal.open{display:flex}
+.reset-box{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:28px 26px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:0}
+.reset-title{font-size:17px;font-weight:700;margin-bottom:4px}
+.reset-sub{font-size:12px;color:var(--text3);margin-bottom:18px}
+/* ===== PASSWORD EYE ===== */
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap input{flex:1;padding-right:38px}
+.pw-eye{position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--text3);padding:0;display:flex;align-items:center;line-height:1;transition:color .15s}
+.pw-eye:hover{color:var(--text)}
+
+/* ===== DATE FILTER ===== */
+.date-flt-btn{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .12s;white-space:nowrap}
+.date-flt-btn:hover,.date-flt-btn.active{border-color:var(--text2);color:var(--text)}
+.date-flt-btn.active{background:var(--bg4)}
+.date-flt-panel{position:fixed;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:14px;z-index:9500;min-width:280px;max-width:calc(100vw - 24px);box-shadow:0 12px 32px rgba(0,0,0,.7);display:none}
+.date-flt-panel.open{display:block}
+.date-flt-wrap{position:relative;overflow:visible}
+.date-flt-tabs{display:flex;gap:4px;margin-bottom:12px}
+.date-flt-tab{flex:1;padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;text-align:center;transition:all .12s}
+.date-flt-tab.active{background:var(--bg4);border-color:var(--text2);color:var(--text);font-weight:500}
+.date-flt-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.date-flt-row label{font-size:11px;color:var(--text3);min-width:36px}
+.date-flt-row input[type=date]{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none}
+.date-flt-apply{width:100%;padding:7px;border-radius:7px;border:none;background:#fff;color:#000;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-top:4px;transition:opacity .15s}
+.date-flt-apply:hover{opacity:.88}
+.date-flt-clear{width:100%;padding:5px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;margin-top:5px}
+.date-flt-clear:hover{color:var(--text)}
+.date-chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:5px;padding:2px 8px;font-size:11px;color:var(--text2)}
+.date-chip button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0;line-height:1}
+
+/* ===== PAGINATION ===== */
+.pg-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 4px 2px;flex-wrap:wrap;gap:8px}
+.pg-info{font-size:11px;color:var(--text3)}
+.pg-info strong{color:var(--text2)}
+.pg-btns{display:flex;align-items:center;gap:4px}
+.pg-btn{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .12s;font-weight:500}
+.pg-btn:hover:not(:disabled){background:var(--bg4);border-color:var(--text2);color:var(--text)}
+.pg-btn:disabled{opacity:.35;cursor:default}
+.pg-btn.active{background:var(--bg4);border-color:var(--text2);color:#fff;font-weight:600}
 </style>
 </head>
 <body>
@@ -478,14 +518,12 @@ tbody td:first-child{color:var(--text);font-weight:500}
             <button class="ttab" id="ttab-month" onclick="setDashPeriod('month',this)">Month</button>
           </div>
         </div>
-        <!-- Data safety banner -->
-        <div id="data-safety-banner" style="display:none;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:9px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;color:#fbbf24">
+        <div id="data-safety-banner" style="display:none;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:9px;padding:10px 14px;margin-bottom:16px;align-items:center;gap:10px;font-size:12px;color:#fbbf24">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M8 1l7 13H1z"/><line x1="8" y1="6" x2="8" y2="9"/><circle cx="8" cy="11.5" r=".5" fill="currentColor"/></svg>
-          <span>Your data is stored in this browser only. <strong style="cursor:pointer;text-decoration:underline" onclick="goTo('profile')">Export a backup</strong> from Profile to keep it safe.</span>
+          <span>Your data lives in this browser only. <strong style="cursor:pointer;text-decoration:underline" onclick="goTo('profile')">Export a backup</strong> from Profile to keep it safe.</span>
           <button onclick="this.parentElement.style.display='none';localStorage.setItem('af_banner_dismissed','1')" style="margin-left:auto;background:none;border:none;color:#fbbf24;cursor:pointer;font-size:16px;line-height:1;padding:0">&times;</button>
         </div>
-        <!-- Charts row -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))" id="dash-charts-row">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px" id="dash-charts-row">
           <div class="card">
             <div class="card-head"><span class="card-title">Weekly Outreach</span></div>
             <div style="position:relative;height:130px"><canvas id="chart-outreach"></canvas></div>
@@ -531,16 +569,39 @@ tbody td:first-child{color:var(--text);font-weight:500}
 
       <!-- TRACKING -->
       <div class="view" id="view-tracking">
-        <div class="toolbar">
+        <div class="toolbar" style="flex-wrap:wrap;gap:6px">
           <div class="search-wrap">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;flex-shrink:0"><circle cx="7" cy="7" r="5.5"/><line x1="11" y1="11" x2="14" y2="14"/></svg>
-            <input type="text" placeholder="Search..." id="sht-q" oninput="renderRows()">
+            <input type="text" placeholder="Search..." id="sht-q" oninput="_shtPage=1;renderRows()">
           </div>
-          <select class="flt-sel" id="sht-status" onchange="renderRows()">
+          <select class="flt-sel" id="sht-status" onchange="_shtPage=1;renderRows()">
             <option value="">All Status</option>
           </select>
           <div class="soc-btns" id="soc-btns"></div>
-          <button class="btn" onclick="exportSheet()">
+          <!-- DATE FILTER -->
+          <div class="date-flt-wrap" id="date-flt-wrap">
+            <button class="date-flt-btn" id="date-flt-btn" onclick="toggleDateFilter(event)">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12"><rect x="1" y="2" width="12" height="11" rx="2"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="4" y1="1" x2="4" y2="3"/><line x1="10" y1="1" x2="10" y2="3"/></svg>
+              <span id="date-flt-label">Date</span>
+              <svg viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" width="8" height="5"><path d="M1 1l3 3 3-3"/></svg>
+            </button>
+            <div class="date-flt-panel" id="date-flt-panel" onclick="event.stopPropagation()">
+              <div class="date-flt-tabs">
+                <button class="date-flt-tab active" id="dft-today"    onclick="setDateTab('today')">Today</button>
+                <button class="date-flt-tab"         id="dft-yesterday" onclick="setDateTab('yesterday')">Yesterday</button>
+                <button class="date-flt-tab"         id="dft-all"     onclick="setDateTab('all')">All</button>
+                <button class="date-flt-tab"         id="dft-custom"  onclick="setDateTab('custom')">Custom</button>
+              </div>
+              <div id="date-flt-custom-row" style="display:none">
+                <div class="date-flt-row"><label>From</label><input type="date" id="dft-from" onchange="renderRows()"></div>
+                <div class="date-flt-row"><label>To</label><input type="date" id="dft-to" onchange="renderRows()"></div>
+              </div>
+              <button class="date-flt-apply" onclick="closeDateFilter()">Apply</button>
+              <button class="date-flt-clear" onclick="clearDateFilter()">Clear filter</button>
+            </div>
+          </div>
+          <div id="date-chip-wrap"></div>
+          <button class="btn" onclick="openExportModal('sheet')" style="margin-left:auto">
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 1v7M3 5l3 3 3-3"/><path d="M1 9v1a1 1 0 001 1h8a1 1 0 001-1V9"/></svg>
             Export
           </button>
@@ -553,6 +614,10 @@ tbody td:first-child{color:var(--text);font-weight:500}
             </tr></thead>
             <tbody id="sht-body"></tbody>
           </table>
+        </div>
+        <div class="pg-bar" id="sht-pg-bar" style="display:none">
+          <div class="pg-info" id="sht-pg-info"></div>
+          <div class="pg-btns" id="sht-pg-btns"></div>
         </div>
       </div>
 
@@ -1229,6 +1294,7 @@ function renderSheet() {
 
 function setSocFlt(s) {
   shtSoc = (s === 'All') ? '' : s;
+  _shtPage = 1;
   document.querySelectorAll('.soc-btn').forEach(function(b){ b.classList.toggle('on', b.textContent===s); });
   renderRows();
 }
@@ -1241,19 +1307,67 @@ function renderRows() {
     if (q && !(r.name||'').toLowerCase().includes(q) && !(r.notes||'').toLowerCase().includes(q)) return false;
     if (st && r.status !== st) return false;
     if (shtSoc && r.social !== socMap[shtSoc]) return false;
+    // Date filter
+    if (_dateFlt !== 'all') {
+      if (!r.date) return false;
+      var rd = new Date(r.date + 'T12:00:00');
+      var now = new Date();
+      var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (_dateFlt === 'today') {
+        if (rd.toDateString() !== today.toDateString()) return false;
+      } else if (_dateFlt === 'yesterday') {
+        var yest = new Date(today); yest.setDate(yest.getDate() - 1);
+        if (rd.toDateString() !== yest.toDateString()) return false;
+      } else if (_dateFlt === 'custom') {
+        var from = document.getElementById('dft-from') ? document.getElementById('dft-from').value : '';
+        var to   = document.getElementById('dft-to')   ? document.getElementById('dft-to').value   : '';
+        if (from && r.date < from) return false;
+        if (to   && r.date > to)   return false;
+      }
+    }
     return true;
   });
   var tb = document.getElementById('sht-body');
-  if (!rows.length) {
-    tb.innerHTML = '<tr><td colspan="10" style="padding:48px 20px;text-align:center;color:var(--text3)">' +
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:10px">' +
-      '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40" style="opacity:.3"><rect x="4" y="4" width="32" height="32" rx="4"/><line x1="4" y1="14" x2="36" y2="14"/><line x1="14" y1="4" x2="14" y2="36"/><line x1="4" y1="23" x2="36" y2="23"/></svg>' +
-      '<div style="font-size:14px;font-weight:500;color:var(--text2)">No contacts yet</div>' +
-      '<div style="font-size:12px">Click <strong style=\"color:var(--text)\">+ Add</strong> to log your first DM and start tracking outreach.</div>' +
-      '</div></td></tr>';
+  var pgBar  = document.getElementById('sht-pg-bar');
+  var pgInfo = document.getElementById('sht-pg-info');
+  var pgBtns = document.getElementById('sht-pg-btns');
+  var PAGE   = 25;
+  var total  = rows.length;
+  var totalPages = Math.max(1, Math.ceil(total / PAGE));
+  // Clamp current page
+  if (_shtPage > totalPages) _shtPage = totalPages;
+  var pageRows = rows.slice((_shtPage - 1) * PAGE, _shtPage * PAGE);
+
+  if (!total) {
+    tb.innerHTML = '<tr><td colspan="10" style="padding:48px 20px;text-align:center;color:var(--text3)"><div style="display:flex;flex-direction:column;align-items:center;gap:10px"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40" style="opacity:.3"><rect x="4" y="4" width="32" height="32" rx="4"/><line x1="4" y1="14" x2="36" y2="14"/><line x1="14" y1="4" x2="14" y2="36"/><line x1="4" y1="23" x2="36" y2="23"/></svg><div style="font-size:14px;font-weight:500;color:var(--text2)">No contacts yet</div><div style="font-size:12px">Click <strong style=\"color:var(--text)\">+ Add</strong> to log your first DM.</div></div></td></tr>';
+    if (pgBar) pgBar.style.display = 'none';
     return;
   }
-  tb.innerHTML = rows.map(function(r) {
+
+  // Pagination bar
+  if (pgBar) {
+    pgBar.style.display = total > PAGE ? 'flex' : 'none';
+    if (pgInfo) pgInfo.innerHTML = 'Page <strong>' + _shtPage + '</strong> of <strong>' + totalPages + '</strong> &nbsp;&middot;&nbsp; <strong>' + total + '</strong> total';
+    if (pgBtns) {
+      var btns = '';
+      // Prev
+      btns += '<button class="pg-btn" onclick="shtGoPage(' + (_shtPage-1) + ')"' + (_shtPage<=1?' disabled':'') + '>&larr;</button>';
+      // Page numbers — show max 5 around current
+      var start = Math.max(1, _shtPage - 2);
+      var end   = Math.min(totalPages, start + 4);
+      if (end - start < 4) start = Math.max(1, end - 4);
+      if (start > 1) btns += '<button class="pg-btn" onclick="shtGoPage(1)">1</button>' + (start>2?'<span style="color:var(--text3);padding:0 3px">…</span>':'');
+      for (var p = start; p <= end; p++) {
+        btns += '<button class="pg-btn' + (p===_shtPage?' active':'') + '" onclick="shtGoPage(' + p + ')">' + p + '</button>';
+      }
+      if (end < totalPages) btns += (end<totalPages-1?'<span style="color:var(--text3);padding:0 3px">…</span>':'') + '<button class="pg-btn" onclick="shtGoPage(' + totalPages + ')">' + totalPages + '</button>';
+      // Next
+      btns += '<button class="pg-btn" onclick="shtGoPage(' + (_shtPage+1) + ')"' + (_shtPage>=totalPages?' disabled':'') + '>&rarr;</button>';
+      pgBtns.innerHTML = btns;
+    }
+  }
+
+  tb.innerHTML = pageRows.map(function(r) {
     var dotColors = {'New':'#4ade80','Booked':'#60a5fa','Ghosted':'#f87171','Qualified':'#a78bfa','Follow-up':'#fb923c','Closed':'#86efac','Discovery':'#2dd4bf','Unqualified':'#fca5a5'};
     var statusOpts = S.statuses.map(function(s) {
       var dc = dotColors[s] || '#888';
@@ -2704,7 +2818,6 @@ function authEnter(user) {
     initOnboard();
     requestNotifPermission();
   }, 500);
-  // Start followup notif check every 10 min
   setInterval(checkFollowupNotifs, 600000);
 }
 
@@ -2749,6 +2862,61 @@ document.addEventListener('keydown', function(e) {
 });
 
 
+// ========== TOGGLE PASSWORD EYE ==========
+function togglePw(id, btn) {
+  var inp = document.getElementById(id);
+  if (!inp) return;
+  var show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.innerHTML = show
+    ? '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/><line x1="2" y1="2" x2="18" y2="18"/></svg>'
+    : '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg>';
+}
+
+// ========== FORGOT / RESET PASSWORD ==========
+var _resetEmail = '';
+
+function authForgotPassword() {
+  var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
+  var err = document.getElementById('li-err');
+  if (!email) { err.textContent = 'Enter your email first'; return; }
+  var users = authGetUsers();
+  if (!users[email]) { err.textContent = 'No account found with that email'; return; }
+  _resetEmail = email;
+  document.getElementById('reset-email-display').textContent = 'Enter a new password for ' + email;
+  document.getElementById('reset-pass').value = '';
+  document.getElementById('reset-pass2').value = '';
+  document.getElementById('reset-err').textContent = '';
+  document.getElementById('reset-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('reset-pass').focus(); }, 80);
+}
+
+function closeResetModal() {
+  document.getElementById('reset-modal').classList.remove('open');
+  _resetEmail = '';
+}
+
+function closeResetModalBackdrop(el, e) {
+  if (e.target === el) closeResetModal();
+}
+
+function submitResetPassword() {
+  var p1 = document.getElementById('reset-pass').value;
+  var p2 = document.getElementById('reset-pass2').value;
+  var err = document.getElementById('reset-err');
+  err.style.color = '#f87171';
+  if (p1.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
+  if (p1 !== p2) { err.textContent = 'Passwords do not match'; return; }
+  var users = authGetUsers();
+  if (!users[_resetEmail]) { err.textContent = 'Account not found'; return; }
+  users[_resetEmail].hash = hashPass(p1);
+  authSaveUsers(users);
+  closeResetModal();
+  document.getElementById('li-err').style.color = '#4ade80';
+  document.getElementById('li-err').textContent = 'Password updated. You can now sign in.';
+  document.getElementById('li-pass').value = '';
+}
+
 // ========== ONBOARDING ==========
 var ONBOARD_KEY = 'af_onboarded_v1';
 var _onboardStep = 0;
@@ -2763,22 +2931,18 @@ function initOnboard() {
 
 function renderOnboardDots() {
   var dots = document.getElementById('onboard-dots');
-  var html = '';
+  var h = '';
   for (var i = 0; i < _onboardTotal; i++) {
-    html += '<div class="onboard-dot' + (i === _onboardStep ? ' active' : '') + '"></div>';
+    h += '<div class="onboard-dot' + (i === _onboardStep ? ' active' : '') + '"></div>';
   }
-  dots.innerHTML = html;
-  var btn = document.getElementById('onboard-next-btn');
-  btn.textContent = _onboardStep === _onboardTotal - 1 ? 'Get started' : 'Next →';
+  dots.innerHTML = h;
+  document.getElementById('onboard-next-btn').textContent = _onboardStep === _onboardTotal - 1 ? 'Get started' : 'Next →';
 }
 
 function nextOnboard() {
   document.getElementById('onboard-step-' + _onboardStep).classList.remove('active');
   _onboardStep++;
-  if (_onboardStep >= _onboardTotal) {
-    skipOnboard();
-    return;
-  }
+  if (_onboardStep >= _onboardTotal) { skipOnboard(); return; }
   document.getElementById('onboard-step-' + _onboardStep).classList.add('active');
   renderOnboardDots();
 }
@@ -2791,19 +2955,15 @@ function skipOnboard() {
 // ========== DATA SAFETY BANNER ==========
 function initSafetyBanner() {
   if (localStorage.getItem('af_banner_dismissed')) return;
-  if (S.rows.length > 0 || S.leads.length > 0 || S.cashEntries.length > 0) {
+  if (S.rows.length > 0 || S.leads.length > 0 || (S.cashEntries && S.cashEntries.length > 0)) {
     var el = document.getElementById('data-safety-banner');
     if (el) el.style.display = 'flex';
   }
 }
 
 // ========== DASHBOARD CHARTS ==========
-var _chartsRendered = false;
-
 function renderDashCharts() {
   if (typeof Chart === 'undefined') return;
-
-  // Weekly outreach bar chart
   var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var today = new Date();
   var weekData = [0,0,0,0,0,0,0];
@@ -2811,73 +2971,37 @@ function renderDashCharts() {
     if (!r.date) return;
     var d = new Date(r.date + 'T12:00:00');
     var diff = Math.floor((today - d) / 86400000);
-    if (diff >= 0 && diff < 7) {
-      var dayIdx = d.getDay();
-      weekData[dayIdx]++;
-    }
+    if (diff >= 0 && diff < 7) weekData[d.getDay()]++;
   });
-
   var c1 = document.getElementById('chart-outreach');
-  if (!c1) return;
-  if (c1._chart) c1._chart.destroy();
-  c1._chart = new Chart(c1.getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: days,
-      datasets: [{
-        data: weekData,
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        borderColor: 'rgba(255,255,255,0.5)',
-        borderWidth: 1,
-        borderRadius: 4
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 }, stepSize: 1 }, beginAtZero: true }
-      }
-    }
-  });
-
-  // Conversion funnel horizontal bar
+  if (c1) {
+    if (c1._chart) c1._chart.destroy();
+    c1._chart = new Chart(c1.getContext('2d'), {
+      type: 'bar',
+      data: { labels: days, datasets: [{ data: weekData, backgroundColor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.4)', borderWidth: 1, borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 }, stepSize: 1 }, beginAtZero: true } } }
+    });
+  }
   var tracked = S.rows.length;
-  var leads = S.leads.length;
-  var booked = S.rows.filter(function(r){ return r.status === 'Booked'; }).length + S.leads.filter(function(l){ return l.status === 'Booked'; }).length;
-  var closed = (S.cashEntries || []).length;
-
+  var leads   = S.leads.length;
+  var booked  = S.rows.filter(function(r){ return r.status==='Booked'; }).length + S.leads.filter(function(l){ return l.status==='Booked'; }).length;
+  var closed  = (S.cashEntries||[]).length;
   var c2 = document.getElementById('chart-funnel');
-  if (!c2) return;
-  if (c2._chart) c2._chart.destroy();
-  c2._chart = new Chart(c2.getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: ['Tracked','Leads','Booked','Closed'],
-      datasets: [{
-        data: [tracked, leads, booked, closed],
-        backgroundColor: ['rgba(99,102,241,0.7)','rgba(139,92,246,0.7)','rgba(34,197,94,0.7)','rgba(251,191,36,0.7)'],
-        borderRadius: 4
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 }, stepSize: 1 }, beginAtZero: true },
-        y: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } }
-      }
-    }
-  });
+  if (c2) {
+    if (c2._chart) c2._chart.destroy();
+    c2._chart = new Chart(c2.getContext('2d'), {
+      type: 'bar',
+      data: { labels: ['Tracked','Leads','Booked','Closed'], datasets: [{ data: [tracked,leads,booked,closed], backgroundColor: ['rgba(99,102,241,.7)','rgba(139,92,246,.7)','rgba(34,197,94,.7)','rgba(251,191,36,.7)'], borderRadius: 4 }] },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 }, stepSize: 1 }, beginAtZero: true }, y: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } } } }
+    });
+  }
 }
 
 // ========== BROWSER NOTIFICATIONS ==========
 function requestNotifPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
+  if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
 }
 
 function checkFollowupNotifs() {
@@ -2889,33 +3013,120 @@ function checkFollowupNotifs() {
     if (r.followupTimes[0] && !r.followupTimes[1]) lastChecked = 0;
     else if (r.followupTimes[1] && !r.followupTimes[2]) lastChecked = 1;
     if (lastChecked < 0) return;
-    var t = r.followupTimes[lastChecked];
-    var elapsed = now - t;
     var notifKey = 'af_notif_' + r.id + '_' + lastChecked;
-    if (elapsed >= 48*3600*1000 && !localStorage.getItem(notifKey)) {
+    if (Date.now() - r.followupTimes[lastChecked] >= 48*3600*1000 && !localStorage.getItem(notifKey)) {
       localStorage.setItem(notifKey, '1');
-      new Notification('AscendFlow — Followup Due', {
-        body: r.name + ' is ready for ' + (lastChecked === 0 ? 'F1' : 'F2'),
-        icon: ''
-      });
+      new Notification('AscendFlow — Followup Due', { body: r.name + ' is ready for ' + (lastChecked===0?'F1':'F2') });
     }
   });
 }
 
-// ========== PASSWORD RECOVERY ==========
-function authForgotPassword() {
-  var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
-  if (!email) { document.getElementById('li-err').textContent = 'Enter your email first'; return; }
-  var users = authGetUsers();
-  var user = users[email];
-  if (!user) { document.getElementById('li-err').textContent = 'No account found with that email'; return; }
-  var newPass = prompt('Enter a new password (min 6 characters):');
-  if (!newPass || newPass.length < 6) { document.getElementById('li-err').textContent = 'Password must be at least 6 characters'; return; }
-  users[email].hash = hashPass(newPass);
-  authSaveUsers(users);
-  document.getElementById('li-err').style.color = '#4ade80';
-  document.getElementById('li-err').textContent = 'Password updated. You can now sign in.';
+
+// ========== DATE FILTER ==========
+var _dateFlt = 'all'; // 'all' | 'today' | 'yesterday' | 'custom'
+var _shtPage = 1;    // current tracking sheet page
+
+function shtGoPage(p) {
+  _shtPage = p;
+  renderRows();
+  // Scroll table top
+  var tw = document.querySelector('.tbl-wrap');
+  if (tw) tw.scrollTop = 0;
 }
+
+function toggleDateFilter(e) {
+  e.stopPropagation();
+  var panel = document.getElementById('date-flt-panel');
+  var btn   = document.getElementById('date-flt-btn');
+  var isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+    return;
+  }
+  // Position panel centered under button, clamped to viewport
+  var rect  = btn.getBoundingClientRect();
+  var pw    = 280;
+  var left  = rect.left + rect.width / 2 - pw / 2;
+  var top   = rect.bottom + 6;
+  // Clamp so panel stays on screen
+  left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+  panel.style.left = left + 'px';
+  panel.style.top  = top + 'px';
+  panel.style.width = pw + 'px';
+  panel.classList.add('open');
+  btn.classList.add('active');
+}
+
+function closeDateFilter() {
+  document.getElementById('date-flt-panel').classList.remove('open');
+  document.getElementById('date-flt-btn').classList.remove('active');
+  updateDateChip();
+  renderRows();
+}
+
+function clearDateFilter() {
+  _dateFlt = 'all';
+  _shtPage = 1;
+  setDateTab('all');
+  document.getElementById('date-flt-panel').classList.remove('open');
+  document.getElementById('date-flt-btn').classList.remove('active');
+  document.getElementById('date-flt-label').textContent = 'Date';
+  document.getElementById('date-chip-wrap').innerHTML = '';
+  document.getElementById('date-flt-btn').classList.remove('active');
+  renderRows();
+}
+
+function setDateTab(tab) {
+  _dateFlt = tab;
+  ['today','yesterday','all','custom'].forEach(function(t) {
+    var el = document.getElementById('dft-' + t);
+    if (el) el.classList.toggle('active', t === tab);
+  });
+  var customRow = document.getElementById('date-flt-custom-row');
+  if (customRow) customRow.style.display = tab === 'custom' ? 'block' : 'none';
+  if (tab !== 'custom') { _shtPage = 1; updateDateChip(); renderRows(); }
+}
+
+function updateDateChip() {
+  var label = 'Date';
+  var chipText = '';
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (_dateFlt === 'today') {
+    label = 'Today';
+    chipText = 'Today';
+  } else if (_dateFlt === 'yesterday') {
+    var y = new Date(today); y.setDate(y.getDate()-1);
+    label = 'Yesterday';
+    chipText = 'Yesterday';
+  } else if (_dateFlt === 'custom') {
+    var from = (document.getElementById('dft-from')||{value:''}).value;
+    var to   = (document.getElementById('dft-to')||{value:''}).value;
+    if (from || to) {
+      chipText = (from || '…') + ' → ' + (to || '…');
+      label = chipText;
+    }
+  }
+  var lbl = document.getElementById('date-flt-label');
+  if (lbl) lbl.textContent = label;
+  var chip = document.getElementById('date-chip-wrap');
+  if (chip) {
+    chip.innerHTML = chipText
+      ? '<div class="date-chip">' + chipText + '<button onclick="clearDateFilter()">&times;</button></div>'
+      : '';
+  }
+}
+
+// Close date panel on outside click
+document.addEventListener('click', function(e) {
+  var panel = document.getElementById('date-flt-panel');
+  var wrap  = document.getElementById('date-flt-wrap');
+  if (panel && panel.classList.contains('open') && wrap && !wrap.contains(e.target)) {
+    panel.classList.remove('open');
+    document.getElementById('date-flt-btn').classList.remove('active');
+  }
+});
 
 // ========== BOOT ==========
 (function() {
@@ -2936,34 +3147,55 @@ if (document.readyState === "loading") {
 <div class="onboard-overlay hidden" id="onboard-overlay">
   <div class="onboard-card">
     <div class="onboard-dots" id="onboard-dots"></div>
-    <!-- Step 1 -->
     <div class="onboard-step active" id="onboard-step-0">
       <div class="onboard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
       <div class="onboard-title">Welcome to AscendFlow</div>
-      <div class="onboard-body">Your personal CRM built for appointment setters. Track outreach, manage leads, log cash and stay on top of followups — all in one place. Let us show you around in 4 quick steps.</div>
+      <div class="onboard-body">Your personal CRM built for appointment setters. Track outreach, manage leads, log cash and stay on top of followups. Let us show you around in 4 quick steps.</div>
     </div>
-    <!-- Step 2 -->
     <div class="onboard-step" id="onboard-step-1">
       <div class="onboard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="8" y1="2" x2="8" y2="22"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="2" y1="15" x2="22" y2="15"/></svg></div>
       <div class="onboard-title">Tracking Sheet</div>
-      <div class="onboard-body">Every DM you send goes here. Log the name, platform (LinkedIn, IG, X), pain point and status. Check off C, F1, F2 as you follow up — the app auto-tracks timing and warns you when 48hrs is up. Hot prospects? Hit the arrow to push them to Leads.</div>
+      <div class="onboard-body">Every DM you send goes here. Log the name, platform, pain point and status. Check off C, F1, F2 as you follow up. The app tracks timing and warns you when 48hrs is up. Hot prospects? Hit the arrow to push them to Leads.</div>
     </div>
-    <!-- Step 3 -->
     <div class="onboard-step" id="onboard-step-2">
       <div class="onboard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
       <div class="onboard-title">Leads and Cash</div>
-      <div class="onboard-body">Qualified prospects graduate to the Leads tab where you track them through to close. When a deal lands, log it in Cash Collected — AscendFlow keeps a running total of your commissions so you always know your numbers.</div>
+      <div class="onboard-body">Qualified prospects graduate to the Leads tab. When a deal closes, log it in Cash Collected and AscendFlow tracks your total commissions so you always know your numbers.</div>
     </div>
-    <!-- Step 4 -->
     <div class="onboard-step" id="onboard-step-3">
       <div class="onboard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
       <div class="onboard-title">One last thing</div>
-      <div class="onboard-body">Your data is saved locally in your browser right now. Export a backup regularly from the Profile page to keep it safe. Now go log your first DM and start stacking those bookings.</div>
+      <div class="onboard-body">Your data is saved in your browser. Export a backup regularly from the Profile page to keep it safe. Now go log your first DM and start stacking those bookings.</div>
     </div>
     <div class="onboard-actions">
       <button class="onboard-skip" onclick="skipOnboard()">Skip tour</button>
       <button class="onboard-next" id="onboard-next-btn" onclick="nextOnboard()">Next &rarr;</button>
     </div>
+  </div>
+</div>
+
+<!-- RESET PASSWORD MODAL -->
+<div class="reset-modal" id="reset-modal" onclick="closeResetModalBackdrop(this,event)">
+  <div class="reset-box">
+    <div class="reset-title">Reset Password</div>
+    <div class="reset-sub" id="reset-email-display">Enter a new password for your account.</div>
+    <div class="auth-field">
+      <label>New Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="reset-pass" placeholder="Min 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitResetPassword()">
+        <button type="button" class="pw-eye" onclick="togglePw('reset-pass',this)" tabindex="-1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg></button>
+      </div>
+    </div>
+    <div class="auth-field">
+      <label>Confirm New Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="reset-pass2" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitResetPassword()">
+        <button type="button" class="pw-eye" onclick="togglePw('reset-pass2',this)" tabindex="-1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="2.5"/></svg></button>
+      </div>
+    </div>
+    <div class="auth-err" id="reset-err" style="margin-bottom:12px"></div>
+    <button class="auth-btn" onclick="submitResetPassword()">Update Password</button>
+    <button onclick="closeResetModal()" style="margin-top:10px;background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancel</button>
   </div>
 </div>
 
