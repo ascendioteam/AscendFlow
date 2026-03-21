@@ -367,6 +367,76 @@ tbody td:first-child{color:var(--text);font-weight:500}
 .pg-btn.active{background:var(--bg4);border-color:var(--text2);color:#fff;font-weight:600}
 
 @keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ===== THEMES ===== */
+/* Default (Dark) — same as :root, explicit for switching */
+[data-theme="dark"] {
+  --bg:#0a0a0a;--bg2:#111111;--bg3:#181818;--bg4:#202020;
+  --border:#252525;--border2:#333;
+  --text:#f0f0f0;--text2:#888;--text3:#555;
+}
+
+[data-theme="light"] {
+  --bg:#f5f5f5;--bg2:#ffffff;--bg3:#ebebeb;--bg4:#e0e0e0;
+  --border:#d4d4d4;--border2:#c0c0c0;
+  --text:#111111;--text2:#555555;--text3:#999999;
+}
+[data-theme="light"] .auth-screen { background:#f0f0f0 }
+[data-theme="light"] .auth-card { background:#fff;border-color:#ddd }
+[data-theme="light"] .modal-wrap { background:rgba(0,0,0,.4) }
+[data-theme="light"] .toast { background:#222;color:#fff }
+[data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select { color:#111;background:var(--bg3);border-color:var(--border) }
+
+[data-theme="midnight"] {
+  --bg:#0d0d1a;--bg2:#12122a;--bg3:#1a1a35;--bg4:#22224a;
+  --border:#2a2a50;--border2:#3a3a6a;
+  --text:#e8e8ff;--text2:#9090cc;--text3:#5555aa;
+}
+
+[data-theme="discord"] {
+  --bg:#313338;--bg2:#2b2d31;--bg3:#383a40;--bg4:#404249;
+  --border:#3e4147;--border2:#4f545c;
+  --text:#dbdee1;--text2:#b5bac1;--text3:#80848e;
+}
+
+[data-theme="gradient"] {
+  --bg:#0f0c29;--bg2:#1a1535;--bg3:#231e45;--bg4:#2d2655;
+  --border:#3d3570;--border2:#4d4590;
+  --text:#f0eeff;--text2:#b0a8e0;--text3:#7068b0;
+}
+
+[data-theme="forest"] {
+  --bg:#0a0f0a;--bg2:#111811;--bg3:#182018;--bg4:#202a20;
+  --border:#253025;--border2:#354535;
+  --text:#e8f0e8;--text2:#88aa88;--text3:#557755;
+}
+
+[data-theme="sunset"] {
+  --bg:#1a0a0f;--bg2:#251015;--bg3:#30151c;--bg4:#3d1c25;
+  --border:#4a2530;--border2:#5a3040;
+  --text:#ffe8ed;--text2:#cc8899;--text3:#994455;
+}
+
+/* Gradient theme gets a special sidebar gradient */
+[data-theme="gradient"] .sidebar {
+  background: linear-gradient(180deg, #1a0533 0%, #0f0c29 50%, #001a33 100%) !important;
+  border-right-color: #4d4590 !important;
+}
+[data-theme="gradient"] .auth-screen {
+  background: linear-gradient(135deg, #0f0c29 0%, #1a0533 50%, #001a33 100%) !important;
+}
+
+/* ===== THEME SWITCHER UI ===== */
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.theme-swatch{border-radius:10px;padding:0;border:2px solid transparent;cursor:pointer;overflow:hidden;transition:all .15s;height:70px;position:relative}
+.theme-swatch:hover{transform:scale(1.04)}
+.theme-swatch.active{border-color:#fff}
+.theme-swatch-inner{width:100%;height:100%;display:flex;flex-direction:column;padding:8px;gap:4px}
+.theme-swatch-bar{height:4px;border-radius:2px;width:70%}
+.theme-swatch-bar2{height:4px;border-radius:2px;width:50%}
+.theme-swatch-label{position:absolute;bottom:5px;left:7px;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.85}
+.theme-check{position:absolute;top:5px;right:5px;width:16px;height:16px;border-radius:50%;background:#fff;display:none;align-items:center;justify-content:center}
+.theme-swatch.active .theme-check{display:flex}
 </style>
 </head>
 <body>
@@ -464,9 +534,9 @@ tbody td:first-child{color:var(--text);font-weight:500}
           <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12"><circle cx="7" cy="4.5" r="2.5"/><path d="M1.5 12c0-2.5 2.5-4.5 5.5-4.5s5.5 2 5.5 4.5"/></svg>
           <span class="user-pill-name" id="user-pill-name">—</span>
         </div>
-        <button class="logout-btn" onclick="clearAllNotifications()" title="Clear notifications" style="margin-right:4px">&#128276;</button><button class="logout-btn" onclick="authLogout()">Log out</button>
+        <button class="logout-btn" onclick="clearAllNotifications()" title="Clear notifications" style="padding:5px 8px;font-size:13px;line-height:1;margin-right:2px">&#128276;</button><button class="logout-btn" onclick="authLogout()">Log out</button>
       </div>
-      <div class="live-pill"><div class="live-dot"></div>Live sync on</div>
+      <div class="live-pill"><div class="live-dot"></div>Auto-save on</div>
     </div>
   </div>
 
@@ -823,6 +893,13 @@ tbody td:first-child{color:var(--text);font-weight:500}
             <div class="sv-ind"><div class="sv-dot"></div><span>Saved</span></div>
           </div>
 
+          <!-- Theme Card -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+            <div class="sec-title" style="margin-bottom:4px">Appearance</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Choose a theme for your AscendFlow workspace</div>
+            <div class="theme-grid" id="theme-grid"></div>
+          </div>
+
           <!-- Data Card -->
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
             <div class="sec-title" style="margin-bottom:4px">Data</div>
@@ -1049,7 +1126,7 @@ function goTo(v) {
   if (v === 'offer') loadOfferPage();
   if (v === 'eod') renderEod();
   if (v === 'cash') renderCash();
-  if (v === 'profile') loadProfile();
+  if (v === 'profile') { loadProfile(); setTimeout(renderThemeGrid, 50); }
   if (v === 'faq') renderFaq();
   if (v === 'support') {
     setTimeout(function() {
@@ -2672,7 +2749,9 @@ function submitFeedback(type) {
   var msg   = (document.getElementById('fb-msg').value || '').trim();
   if (!msg) { toast('Please write a message first'); return; }
   var email = (document.getElementById('fb-email').value || '').trim();
-  var btn   = document.querySelector('[data-t="' + type + '"]');
+
+  // Find the send button inside the modal footer
+  var btn = document.querySelector('.mfoot .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
 
   fetch('https://formspree.io/f/xojknrby', {
@@ -2682,19 +2761,19 @@ function submitFeedback(type) {
       type: type,
       message: msg,
       _replyto: email || 'no-reply@ascendflow.app',
-      subject: '[AscendFlow] ' + type.charAt(0).toUpperCase() + type.slice(1) + ' Feedback'
+      subject: '[AscendFlow Feedback] ' + type.charAt(0).toUpperCase() + type.slice(1)
     })
   })
   .then(function(res) {
     if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
     if (res.ok) {
       closeModal();
-      toast('Feedback sent! Thanks ' + String.fromCharCode(10084));
+      toast('Feedback sent! Thanks ❤');
     } else {
       res.json().then(function(d) {
-        toast('Send failed: ' + (d.error || 'Please try again'));
+        toast('Send failed: ' + (d.error || 'Try again'));
       }).catch(function() {
-        toast('Send failed — try emailing ' + _em + ' directly');
+        toast('Send failed — email ' + _em + ' directly');
       });
     }
   })
@@ -3378,7 +3457,61 @@ function clearAllNotifications() {
   toast('Notifications cleared');
 }
 
+
+// ========== THEME SYSTEM ==========
+var THEMES = [
+  { id: 'dark',     name: 'Dark',     bg: '#0a0a0a', bg2: '#111111', text: '#f0f0f0', accent: '#444' },
+  { id: 'light',    name: 'Light',    bg: '#f5f5f5', bg2: '#ffffff', text: '#111111', accent: '#ddd' },
+  { id: 'midnight', name: 'Midnight', bg: '#0d0d1a', bg2: '#12122a', text: '#e8e8ff', accent: '#3a3a6a' },
+  { id: 'discord',  name: 'Discord',  bg: '#313338', bg2: '#2b2d31', text: '#dbdee1', accent: '#4f545c' },
+  { id: 'gradient', name: 'Gradient', bg: 'linear-gradient(135deg,#0f0c29,#1a0533,#001a33)', bg2: '#1a1535', text: '#f0eeff', accent: '#4d4590', isGradient: true },
+  { id: 'forest',   name: 'Forest',   bg: '#0a0f0a', bg2: '#111811', text: '#e8f0e8', accent: '#354535' },
+  { id: 'sunset',   name: 'Sunset',   bg: '#1a0a0f', bg2: '#251015', text: '#ffe8ed', accent: '#5a3040' },
+];
+
+var _currentTheme = 'dark';
+
+function applyTheme(id) {
+  _currentTheme = id;
+  document.documentElement.setAttribute('data-theme', id);
+  localStorage.setItem('af_theme', id);
+  renderThemeGrid();
+}
+
+function loadTheme() {
+  var saved = localStorage.getItem('af_theme') || 'dark';
+  _currentTheme = saved;
+  document.documentElement.setAttribute('data-theme', saved);
+}
+
+function renderThemeGrid() {
+  var grid = document.getElementById('theme-grid');
+  if (!grid) return;
+  var rows = THEMES.map(function(t) {
+    var active = _currentTheme === t.id ? ' active' : '';
+    var outerBg = t.bg;
+    var innerBg = t.isGradient ? t.bg : t.bg2;
+    var checkSvg = '<svg viewBox="0 0 10 8" fill="none" stroke="#000" stroke-width="2" width="8" height="8"><polyline points="1,4 4,7 9,1"/></svg>';
+    return '<button class="theme-swatch' + active + '" data-tid="' + t.id + '" onclick="applyThemeBtn(this)" style="background:' + outerBg + '">' +
+      '<div class="theme-swatch-inner" style="background:' + innerBg + '">' +
+        '<div class="theme-swatch-bar" style="background:' + t.accent + '"></div>' +
+        '<div class="theme-swatch-bar2" style="background:' + t.accent + ';opacity:.6"></div>' +
+        '<div class="theme-swatch-bar" style="background:' + t.accent + ';width:40%;margin-top:2px"></div>' +
+      '</div>' +
+      '<div class="theme-swatch-label" style="color:' + t.text + '">' + t.name + '</div>' +
+      '<div class="theme-check">' + checkSvg + '</div>' +
+    '</button>';
+  });
+  grid.innerHTML = rows.join('');
+}
+
+function applyThemeBtn(btn) {
+  var id = btn.getAttribute('data-tid');
+  if (id) applyTheme(id);
+}
+
 // ========== BOOT ==========
+loadTheme(); // apply saved theme immediately before anything renders
 (function() {
   var s = document.createElement('script');
   s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
