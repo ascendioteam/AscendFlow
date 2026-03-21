@@ -365,6 +365,8 @@ tbody td:first-child{color:var(--text);font-weight:500}
 .pg-btn:hover:not(:disabled){background:var(--bg4);border-color:var(--text2);color:var(--text)}
 .pg-btn:disabled{opacity:.35;cursor:default}
 .pg-btn.active{background:var(--bg4);border-color:var(--text2);color:#fff;font-weight:600}
+
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
 </style>
 </head>
 <body>
@@ -462,7 +464,7 @@ tbody td:first-child{color:var(--text);font-weight:500}
           <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12"><circle cx="7" cy="4.5" r="2.5"/><path d="M1.5 12c0-2.5 2.5-4.5 5.5-4.5s5.5 2 5.5 4.5"/></svg>
           <span class="user-pill-name" id="user-pill-name">—</span>
         </div>
-        <button class="logout-btn" onclick="authLogout()">Log out</button>
+        <button class="logout-btn" onclick="clearAllNotifications()" title="Clear notifications" style="margin-right:4px">&#128276;</button><button class="logout-btn" onclick="authLogout()">Log out</button>
       </div>
       <div class="live-pill"><div class="live-dot"></div>Live sync on</div>
     </div>
@@ -640,8 +642,9 @@ tbody td:first-child{color:var(--text);font-weight:500}
                 <button class="dd-clear" onclick="clearFilter('status')">Clear</button>
               </div>
               <div id="status-dd-options"></div>
-              <div style="border-top:1px solid var(--border);padding:8px 10px">
+              <div style="border-top:1px solid var(--border);padding:8px 10px;display:flex;gap:6px">
                 <button class="dd-add" onclick="addStatusFromDd()">+ Add Status</button>
+                <button class="dd-add" style="margin-left:auto;color:var(--text3)" onclick="closeAllDds();manageStatuses()">Manage</button>
               </div>
             </div>
           </div>
@@ -657,6 +660,9 @@ tbody td:first-child{color:var(--text);font-weight:500}
                 <button class="dd-clear" onclick="clearFilter('social')">Clear</button>
               </div>
               <div id="social-dd-options"></div>
+              <div style="border-top:1px solid var(--border);padding:8px 10px">
+                <button class="dd-add" onclick="closeAllDds();manageSocials()">Manage Platforms</button>
+              </div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);margin-left:4px" id="filter-summary"></div>
@@ -918,6 +924,15 @@ tbody td:first-child{color:var(--text);font-weight:500}
 // ========== STATE ==========
 var _em = 'ascendioteam' + '@' + 'gmail.com';
 var SK = 'ascendflow_v1';
+
+// Always returns today's date in YYYY-MM-DD in LOCAL timezone
+function todayLocal() {
+  var d = new Date();
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var day = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + day;
+}
 var S = {
   profile: {name:'',role:'',email:'',booking:'',notes:'',avatar:''},
   offer: {name:'',desc:'',pmin:'',pmax:'',dur:'',del:'',forWho:'',pay:'',guarantee:'',deliverables:[],objections:[]},
@@ -927,6 +942,9 @@ var S = {
   leads: [],
   events: [],
   statuses: ['New','Qualified','Unqualified','Follow-up','Closed','Booked','Discovery','Ghosted'],
+  statusColors: {},
+  socials: ['Instagram','X','LinkedIn'],
+  socialColors: {},
   scripts: [],
   cashEntries: [],
   uid: 1
@@ -997,7 +1015,14 @@ function tagCls(s) {
 
 function socCls(s) {
   var map = {'Instagram':'soc-ig','X':'soc-x','LinkedIn':'soc-li'};
-  return 'soc ' + (map[s] || 'soc-li');
+  return 'soc ' + (map[s] || 'soc-custom');
+}
+
+function socStyle(s) {
+  if (S.socialColors && S.socialColors[s]) {
+    return ' style="background:' + S.socialColors[s] + '22;color:' + S.socialColors[s] + ';border-color:' + S.socialColors[s] + '44"';
+  }
+  return '';
 }
 
 // ========== NAV ==========
@@ -1223,7 +1248,7 @@ function renderCal() {
 }
 
 function openEventModal(date, time) {
-  var today = date || (new Date()).toISOString().split('T')[0];
+  var today = date || todayLocal();
   var t = time || '09:00';
   showModal('New Event',
     '<div class="field"><label>Title</label><input type="text" id="ev-title" placeholder="Meeting title"></div>' +
@@ -1232,9 +1257,30 @@ function openEventModal(date, time) {
     '<div class="field"><label>Person / Lead</label><input type="text" id="ev-person" placeholder="Name or @handle"></div>' +
     '<div class="field"><label>Type</label><select id="ev-type">' +
       '<option value="meeting">Meeting</option><option value="booked">Booked Call</option>' +
+      '<option value="reminder">Reminder</option>' +
       '<option value="followup">Follow-up</option><option value="discovery">Discovery</option>' +
     '</select></div>' +
-    '<div class="field"><label>Notes</label><textarea id="ev-notes" rows="2" placeholder="Details..."></textarea></div>',
+    '<div class="field"><label>Notes</label><textarea id="ev-notes" rows="2" placeholder="Details..."></textarea></div>' +
+    '<div style="background:var(--bg3);border-radius:8px;padding:12px;margin-top:4px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+        '<span style="font-size:12px;font-weight:600">&#128276; Reminder</span>' +
+        '<label style="display:flex;align-items:center;gap:6px;cursor:pointer">' +
+          '<input type="checkbox" id="ev-notif" checked style="width:15px;height:15px;cursor:pointer">' +
+          '<span style="font-size:12px;color:var(--text2)">Enable notification</span>' +
+        '</label>' +
+      '</div>' +
+      '<div class="field" style="margin:0"><label>Remind me</label>' +
+        '<select id="ev-reminder" style="width:100%">' +
+          '<option value="0">At event time</option>' +
+          '<option value="5">5 minutes before</option>' +
+          '<option value="10">10 minutes before</option>' +
+          '<option value="15" selected>15 minutes before</option>' +
+          '<option value="30">30 minutes before</option>' +
+          '<option value="60">1 hour before</option>' +
+          '<option value="1440">1 day before</option>' +
+        '</select>' +
+      '</div>' +
+    '</div>',
     '<button class="btn" onclick="closeModal()">Cancel</button>' +
     '<button class="btn btn-primary" onclick="saveEvent()">Save Event</button>'
   );
@@ -1245,6 +1291,8 @@ function saveEvent() {
   var date = document.getElementById('ev-date').value;
   if (!title) { toast('Title required'); return; }
   if (!date) { toast('Date required'); return; }
+  var evNotif = document.getElementById('ev-notif');
+  var evReminder = document.getElementById('ev-reminder');
   var ev = {
     id: nextId(),
     title: title,
@@ -1252,7 +1300,10 @@ function saveEvent() {
     time: (document.getElementById('ev-time').value || '09:00').split(':')[0],
     person: document.getElementById('ev-person').value,
     type: document.getElementById('ev-type').value,
-    notes: document.getElementById('ev-notes').value
+    notes: document.getElementById('ev-notes').value,
+    notif: evNotif ? evNotif.checked : true,
+    reminder: evReminder ? parseInt(evReminder.value) : 15,
+    notifFired: false
   };
   S.events.push(ev);
   saveState(); closeModal(); renderCal(); toast('Event saved ✓');
@@ -1285,9 +1336,13 @@ function renderSheet() {
   var sel = document.getElementById('sht-status');
   sel.innerHTML = '<option value="">All Status</option>';
   S.statuses.forEach(function(s){ sel.innerHTML += '<option value="' + s + '">' + s + '</option>'; });
-  var socials = ['All','IG','X','LI'];
-  document.getElementById('soc-btns').innerHTML = socials.map(function(s) {
-    return '<button class="soc-btn' + ((!shtSoc&&s==='All')||shtSoc===s?' on':'') + '" onclick="setSocFlt(\'' + s + '\')">' + s + '</button>';
+  var socAbbrMap = {'Instagram':'IG','X':'X','LinkedIn':'LI'};
+  var socBtns = ['All'].concat(S.socials||['Instagram','X','LinkedIn']);
+  document.getElementById('soc-btns').innerHTML = socBtns.map(function(s) {
+    var lbl = s === 'All' ? 'All' : (socAbbrMap[s] || s.substring(0,3));
+    var col = s !== 'All' && S.socialColors && S.socialColors[s] ? S.socialColors[s] : '';
+    var style = col ? ' style="border-color:'+col+';color:'+col+'"' : '';
+    return '<button class="soc-btn' + ((!shtSoc&&s==='All')||shtSoc===s?' on':'') + '"' + style + ' onclick="setSocFlt(\'' + s + '\')">' + lbl + '</button>';
   }).join('');
   renderRows();
 }
@@ -1581,13 +1636,13 @@ function openRowModal(id) {
   showModal(r ? 'Edit Entry' : 'New DM Entry',
     '<div class="field"><label>Name / Handle</label><input type="text" id="tr-name" value="' + (r?r.name:'') + '" placeholder="@handle or name"></div>' +
     '<div class="field"><label>Social</label><select id="tr-social">' +
-      ['Instagram','X','LinkedIn'].map(function(s){ return '<option'+(r&&r.social===s?' selected':'')+'>'+s+'</option>'; }).join('') +
+      (S.socials||['Instagram','X','LinkedIn']).map(function(s){ return '<option'+(r&&r.social===s?' selected':'')+'>'+s+'</option>'; }).join('') +
     '</select></div>' +
     '<div class="field"><label>Business Type</label><input type="text" id="tr-biz" value="' + (r?r.bizType||'':'') + '" placeholder="e.g. AI SaaS"></div>' +
     '<div class="field"><label>Pain Point</label><input type="text" id="tr-pain" value="' + (r?r.painPoint||'':'') + '" placeholder="e.g. Growth"></div>' +
     '<div class="field"><label>Status</label><select id="tr-status">' + statusOpts + '</select></div>' +
     '<div class="field"><label>Type</label><select id="tr-type"><option'+(r&&r.type==='Inbound'?' selected':'')+'>Inbound</option><option'+(r&&r.type==='Outbound'?' selected':'')+'>Outbound</option></select></div>' +
-    '<div class="field"><label>Date</label><input type="date" id="tr-date" value="' + (r?r.date:new Date().toISOString().split('T')[0]) + '"></div>' +
+    '<div class="field"><label>Date</label><input type="date" id="tr-date" value="' + (r?r.date:todayLocal()) + '"></div>' +
     '<div class="field"><label>Notes</label><textarea id="tr-notes" rows="2">' + (r?r.notes||'':'') + '</textarea></div>',
     (r?'<button class="btn btn-danger" onclick="delRow('+r.id+')">Delete</button>':'') +
     '<button class="btn" onclick="closeModal()">Cancel</button>' +
@@ -1700,28 +1755,27 @@ function toggleSocialFilter(s) {
 function addStatusFromDd() {
   showModal('Add New Status',
     '<div class="field"><label>Status Name</label><input type="text" id="new-status-input" placeholder="e.g. Negotiating, Pitched, No Show..." autofocus></div>' +
-    '<div style="font-size:12px;color:var(--text3);margin-top:4px">This status will be available across Leads and Tracking Sheet.</div>',
+    '<div class="field"><label>Color (optional)</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="new-status-color" value="#818cf8" style="width:44px;height:32px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;padding:2px"><span style="font-size:11px;color:var(--text3)">Pick a color for this status</span></div></div>' +
+    '<div style="font-size:12px;color:var(--text3);margin-top:4px">Available across Leads and Tracking Sheet.</div>',
     '<button class="btn" onclick="closeModal()">Cancel</button>' +
     '<button class="btn btn-primary" onclick="confirmAddStatus()">Add Status</button>'
   );
 }
 
 function confirmAddStatus() {
-  var input = document.getElementById('new-status-input');
-  if (!input) return;
-  var trimmed = (input.value||'').trim();
-  if (!trimmed) { toast('Please enter a name'); return; }
-  if (S.statuses.indexOf(trimmed) !== -1) { toast('Status already exists'); return; }
-  S.statuses.push(trimmed);
+  var val = (document.getElementById('new-status-input').value || '').trim();
+  var col = document.getElementById('new-status-color') ? document.getElementById('new-status-color').value : '';
+  if (!val) { toast('Enter a status name'); return; }
+  if (S.statuses.includes(val)) { toast('Status already exists'); return; }
+  S.statuses.push(val);
+  if (col && col !== '#818cf8') {
+    if (!S.statusColors) S.statusColors = {};
+    S.statusColors[val] = col;
+  }
   saveState();
   closeModal();
-  renderLeadsView();
-  // Re-open dropdown so user can see new status
-  setTimeout(function(){
-    var p = document.getElementById('status-dd');
-    if(p) p.classList.add('open');
-  }, 100);
-  toast('Status "' + trimmed + '" added ✓');
+  renderStatusDdOptions();
+  toast('Status "' + val + '" added');
 }
 
 function addStatus() { addStatusFromDd(); }
@@ -1851,7 +1905,7 @@ function openLeadModal(id) {
     '<div class="field"><label>Name / Handle</label><input type="text" id="ld-name" value="' + (l?l.name:'') + '" placeholder="Full name or @handle"></div>' +
     '<div class="field"><label>Company</label><input type="text" id="ld-company" value="' + (l?l.company||'':'') + '" placeholder="Company name"></div>' +
     '<div class="field"><label>Social</label><select id="ld-social">' +
-      ['Instagram','X','LinkedIn'].map(function(s){ return '<option'+(l&&l.social===s?' selected':'')+'>'+s+'</option>'; }).join('') +
+      (S.socials||['Instagram','X','LinkedIn']).map(function(s){ return '<option'+(l&&l.social===s?' selected':'')+'>'+s+'</option>'; }).join('') +
     '</select></div>' +
     '<div class="field"><label>Status</label><select id="ld-status">' + statusOpts + '</select></div>' +
     '<div class="field"><label>Pain Point</label><input type="text" id="ld-pain" value="' + (l?l.painPoint||'':'') + '" placeholder="Main problem"></div>' +
@@ -2615,36 +2669,38 @@ function openFeedbackModal(type) {
 }
 
 function submitFeedback(type) {
-  var msg = (document.getElementById('fb-msg').value||'').trim();
+  var msg   = (document.getElementById('fb-msg').value || '').trim();
   if (!msg) { toast('Please write a message first'); return; }
-  var email = document.getElementById('fb-email').value || '';
-  // ── FORMSPREE SETUP ──────────────────────────────────────────────────────
-  // 1. Go to https://formspree.io and create a free account
-  // 2. Create a new form pointed at your email (see _em variable)
-  // 3. Copy your Form ID (looks like: xpwzabcd) and paste it below
-  var FORMSPREE_ID = 'xojknrby'; // <-- PASTE YOUR ID HERE
-  // ────────────────────────────────────────────────────────────────────────
-  if (FORMSPREE_ID === 'YOUR_FORMSPREE_ID') {
-    // Fallback: open mail client if Formspree not configured
-    var subject = encodeURIComponent('[AscendFlow ' + type.charAt(0).toUpperCase() + type.slice(1) + '] Feedback');
-    var body = encodeURIComponent(msg);
-    window.location.href = 'mailto:' + _em + '?subject=' + subject + '&body=' + body;
-    closeModal(); toast('Opening email client...');
-    return;
-  }
-  var btn = document.querySelector('[data-t="' + type + '"]');
+  var email = (document.getElementById('fb-email').value || '').trim();
+  var btn   = document.querySelector('[data-t="' + type + '"]');
   if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
-  fetch('https://formspree.io/f/' + FORMSPREE_ID, {
+
+  fetch('https://formspree.io/f/xojknrby', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-    body: JSON.stringify({type: type, message: msg, email: email || 'not provided'})
-  }).then(function(r) {
-    if (r.ok) { closeModal(); toast('Sent! We will get back to you shortly ✓'); }
-    else { toast('Send failed — try emailing ' + _em + ' directly'); }
-  }).catch(function() {
-    toast('Send failed — try emailing ' + _em + ' directly');
-  }).finally(function() {
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      type: type,
+      message: msg,
+      _replyto: email || 'no-reply@ascendflow.app',
+      subject: '[AscendFlow] ' + type.charAt(0).toUpperCase() + type.slice(1) + ' Feedback'
+    })
+  })
+  .then(function(res) {
     if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+    if (res.ok) {
+      closeModal();
+      toast('Feedback sent! Thanks ' + String.fromCharCode(10084));
+    } else {
+      res.json().then(function(d) {
+        toast('Send failed: ' + (d.error || 'Please try again'));
+      }).catch(function() {
+        toast('Send failed — try emailing ' + _em + ' directly');
+      });
+    }
+  })
+  .catch(function() {
+    if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+    toast('Send failed — try emailing ' + _em + ' directly');
   });
 }
 
@@ -2819,6 +2875,7 @@ function authEnter(user) {
     requestNotifPermission();
   }, 500);
   setInterval(checkFollowupNotifs, 600000);
+  startReminderChecker();
 }
 
 function authLogout() {
@@ -2985,7 +3042,7 @@ function renderDashCharts() {
   }
   var tracked = S.rows.length;
   var leads   = S.leads.length;
-  var booked  = S.rows.filter(function(r){ return r.status==='Booked'; }).length + S.leads.filter(function(l){ return l.status==='Booked'; }).length;
+  var booked  = S.rows.filter(function(r){ return r.status==='Booked'; }).length;
   var closed  = (S.cashEntries||[]).length;
   var c2 = document.getElementById('chart-funnel');
   if (c2) {
@@ -3022,6 +3079,122 @@ function checkFollowupNotifs() {
 }
 
 
+
+function deleteStatus(s) {
+  if (['New','Qualified','Booked'].includes(s)) { toast('Cannot delete core status'); return; }
+  if (!confirm('Delete status "' + s + '"? Contacts keep it but it will not appear in dropdowns.')) return;
+  S.statuses = S.statuses.filter(function(x){ return x !== s; });
+  if (S.statusColors) delete S.statusColors[s];
+  saveState();
+  renderStatusDdOptions();
+  toast('Status deleted');
+}
+
+function manageStatuses() {
+  var list = S.statuses.map(function(s) {
+    var col = S.statusColors && S.statusColors[s] ? S.statusColors[s] : '#888888';
+    var enc = encodeURIComponent(s);
+    var isCore = ['New','Qualified','Unqualified','Follow-up','Closed','Booked','Discovery','Ghosted'].includes(s);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="width:10px;height:10px;border-radius:50%;background:' + col + ';flex-shrink:0"></div>' +
+      '<span style="flex:1;font-size:13px">' + s + '</span>' +
+      '<input type="color" value="' + col + '" data-target="' + enc + '" data-kind="status" style="width:28px;height:24px;border-radius:4px;border:1px solid var(--border);cursor:pointer;padding:1px;background:none" onchange="onColorPick(this)" title="Change color">' +
+      (isCore ? '<span style="font-size:10px;color:var(--text3);padding:0 4px">core</span>' :
+        '<button data-del="' + enc + '" data-kind="status" onclick="onDeleteItem(this)" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:16px;padding:0 4px;line-height:1" title="Delete">&times;</button>') +
+    '</div>';
+  }).join('');
+  showModal('Manage Statuses',
+    list +
+    '<div style="margin-top:12px"><button class="btn btn-primary" style="width:100%" onclick="closeModal();addStatusFromDd()">+ Add New Status</button></div>',
+    '<button class="btn" onclick="closeModal()">Done</button>'
+  );
+}
+
+function setStatusColor(s, col) {
+  if (!S.statusColors) S.statusColors = {};
+  S.statusColors[s] = col;
+  saveState();
+}
+
+// Generic handlers using data attributes — avoids quote escaping issues
+function onColorPick(el) {
+  var name = decodeURIComponent(el.getAttribute('data-target') || '');
+  var kind = el.getAttribute('data-kind');
+  var col  = el.value;
+  if (!name) return;
+  if (kind === 'status') setStatusColor(name, col);
+  else if (kind === 'social') setSocialColor(name, col);
+}
+
+function onDeleteItem(el) {
+  var name = decodeURIComponent(el.getAttribute('data-del') || '');
+  var kind = el.getAttribute('data-kind');
+  if (!name) return;
+  if (kind === 'status') deleteStatus(name);
+  else if (kind === 'social') deleteSocial(name);
+}
+
+// ── SOCIAL MANAGEMENT ─────────────────────────────────────────────────────────
+function manageSocials() {
+  var list = (S.socials||['Instagram','X','LinkedIn']).map(function(s) {
+    var col = S.socialColors && S.socialColors[s] ? S.socialColors[s] : '#888888';
+    var enc = encodeURIComponent(s);
+    var isCore = ['Instagram','X','LinkedIn'].includes(s);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="width:10px;height:10px;border-radius:50%;background:' + col + ';flex-shrink:0"></div>' +
+      '<span style="flex:1;font-size:13px">' + s + '</span>' +
+      '<input type="color" value="' + col + '" data-target="' + enc + '" data-kind="social" style="width:28px;height:24px;border-radius:4px;border:1px solid var(--border);cursor:pointer;padding:1px;background:none" onchange="onColorPick(this)" title="Change color">' +
+      (isCore ? '<span style="font-size:10px;color:var(--text3);padding:0 4px">default</span>' :
+        '<button data-del="' + enc + '" data-kind="social" onclick="onDeleteItem(this)" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:16px;padding:0 4px;line-height:1" title="Delete">&times;</button>') +
+    '</div>';
+  }).join('');
+  showModal('Manage Socials',
+    list +
+    '<div style="margin-top:12px">' +
+    '<div class="field"><label>New Platform</label><input type="text" id="new-social-input" placeholder="e.g. TikTok, Twitter..." autofocus></div>' +
+    '<div class="field"><label>Color</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="new-social-color" value="#818cf8" style="width:44px;height:32px;border-radius:6px;border:1px solid var(--border);cursor:pointer;padding:2px;background:none"><span style="font-size:11px;color:var(--text3)">Pick a color</span></div></div>' +
+    '<button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="confirmAddSocial()">+ Add Platform</button>' +
+    '</div>',
+    '<button class="btn" onclick="closeModal()">Done</button>'
+  );
+}
+
+function confirmAddSocial() {
+  var val = (document.getElementById('new-social-input').value || '').trim();
+  var col = document.getElementById('new-social-color') ? document.getElementById('new-social-color').value : '';
+  if (!val) { toast('Enter a platform name'); return; }
+  if (!S.socials) S.socials = ['Instagram','X','LinkedIn'];
+  if (S.socials.includes(val)) { toast('Platform already exists'); return; }
+  S.socials.push(val);
+  if (col && col !== '#818cf8') {
+    if (!S.socialColors) S.socialColors = {};
+    S.socialColors[val] = col;
+  }
+  saveState();
+  closeModal();
+  // Re-open manage socials to show updated list
+  setTimeout(manageSocials, 100);
+  toast('Platform "' + val + '" added');
+}
+
+function deleteSocial(s) {
+  if (!confirm('Delete platform "' + s + '"?')) return;
+  S.socials = (S.socials||[]).filter(function(x){ return x !== s; });
+  if (S.socialColors) delete S.socialColors[s];
+  saveState();
+  closeModal();
+  setTimeout(manageSocials, 100);
+}
+
+function setSocialColor(s, col) {
+  if (!S.socialColors) S.socialColors = {};
+  S.socialColors[s] = col;
+  saveState();
+}
+
+function closeAllDds() {
+  document.querySelectorAll('.dd-panel').forEach(function(p){ p.classList.remove('open'); });
+}
 // ========== DATE FILTER ==========
 var _dateFlt = 'all'; // 'all' | 'today' | 'yesterday' | 'custom'
 var _shtPage = 1;    // current tracking sheet page
@@ -3127,6 +3300,83 @@ document.addEventListener('click', function(e) {
     document.getElementById('date-flt-btn').classList.remove('active');
   }
 });
+
+
+// ========== CALENDAR REMINDERS ==========
+var _reminderInterval = null;
+
+function startReminderChecker() {
+  if (_reminderInterval) clearInterval(_reminderInterval);
+  _reminderInterval = setInterval(checkReminders, 60000); // check every minute
+  checkReminders(); // check immediately on load
+}
+
+function checkReminders() {
+  if (!S.events || !S.events.length) return;
+  var now = new Date();
+  var changed = false;
+  S.events.forEach(function(ev) {
+    if (!ev.notif || ev.notifFired) return;
+    var evHour = parseInt(ev.time || '9');
+    var evDate = new Date(ev.date + 'T' + String(evHour).padStart(2,'0') + ':00:00');
+    var reminderMs = (ev.reminder || 15) * 60 * 1000;
+    var triggerTime = new Date(evDate.getTime() - reminderMs);
+    if (now >= triggerTime && now < evDate) {
+      ev.notifFired = true;
+      changed = true;
+      fireReminderNotif(ev);
+    }
+  });
+  if (changed) saveState();
+}
+
+function fireReminderNotif(ev) {
+  // Ding sound
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine'; o.frequency.value = 880;
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.8);
+  } catch(e) {}
+
+  var label = ev.reminder === 0 ? 'starting now' : (ev.reminder < 60 ? 'in ' + ev.reminder + ' min' : 'in ' + Math.round(ev.reminder/60) + ' hr');
+  var msg = ev.title + ' — ' + label;
+
+  // Browser notification
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('AscendFlow Reminder', { body: msg, icon: '' });
+  }
+
+  // In-app toast (always)
+  showReminderToast(ev, msg);
+}
+
+function showReminderToast(ev, msg) {
+  var existing = document.getElementById('reminder-toast-wrap');
+  if (!existing) {
+    var wrap = document.createElement('div');
+    wrap.id = 'reminder-toast-wrap';
+    wrap.style.cssText = 'position:fixed;top:18px;right:18px;z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:320px';
+    document.body.appendChild(wrap);
+  }
+  var wrap = document.getElementById('reminder-toast-wrap');
+  var item = document.createElement('div');
+  item.style.cssText = 'background:var(--bg2);border:1px solid var(--border2);border-left:3px solid #60a5fa;border-radius:9px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;align-items:flex-start;gap:10px;animation:slideIn .2s ease';
+  item.innerHTML = '<div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">&#128337; ' + ev.title + '</div><div style="font-size:11px;color:var(--text3)">' + msg + '</div></div>' +
+    '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0;line-height:1">&times;</button>';
+  wrap.appendChild(item);
+  setTimeout(function(){ if (item.parentElement) item.remove(); }, 8000);
+}
+
+function clearAllNotifications() {
+  var wrap = document.getElementById('reminder-toast-wrap');
+  if (wrap) wrap.innerHTML = '';
+  toast('Notifications cleared');
+}
 
 // ========== BOOT ==========
 (function() {
