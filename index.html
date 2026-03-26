@@ -437,6 +437,32 @@ tbody td:first-child{color:var(--text);font-weight:500}
 .theme-swatch-label{position:absolute;bottom:5px;left:7px;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.85}
 .theme-check{position:absolute;top:5px;right:5px;width:16px;height:16px;border-radius:50%;background:#fff;display:none;align-items:center;justify-content:center}
 .theme-swatch.active .theme-check{display:flex}
+
+/* ===== NOTIFICATION PANEL ===== */
+.notif-panel{position:fixed;bottom:70px;left:8px;width:300px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.7);z-index:90000;display:none;flex-direction:column;overflow:hidden;max-height:420px}
+.notif-panel.open{display:flex}
+.notif-panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 10px;border-bottom:1px solid var(--border)}
+.notif-panel-title{font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em}
+.notif-panel-actions{display:flex;gap:6px}
+.notif-panel-clear{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:2px 6px;border-radius:4px}
+.notif-panel-clear:hover{color:var(--text);background:var(--bg3)}
+.notif-list{overflow-y:auto;flex:1}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);transition:background .1s;cursor:default}
+.notif-item:hover{background:var(--bg3)}
+.notif-item:last-child{border-bottom:none}
+.notif-item-icon{width:30px;height:30px;border-radius:8px;background:rgba(96,165,250,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.notif-item-body{flex:1;min-width:0}
+.notif-item-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-item-msg{font-size:11px;color:var(--text3);line-height:1.4}
+.notif-item-time{font-size:10px;color:var(--text3);margin-top:3px}
+.notif-item-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0;opacity:.6}
+.notif-item-del:hover{opacity:1;color:#f87171}
+.notif-empty{padding:32px 14px;text-align:center;color:var(--text3);font-size:12px}
+.notif-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#f87171;border-radius:50%;font-size:9px;font-weight:700;color:#fff;display:none;align-items:center;justify-content:center;line-height:1}
+.notif-bell-wrap{position:relative;display:inline-flex}
+/* Toast hover notification - shown top-right for 60s */
+.reminder-toast-item{background:var(--bg2);border:1px solid var(--border2);border-left:3px solid #60a5fa;border-radius:9px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.6);display:flex;align-items:flex-start;gap:10px;animation:slideIn .25s ease;transition:opacity .5s ease}
+.reminder-toast-item.fading{opacity:0}
 </style>
 </head>
 <body>
@@ -534,7 +560,10 @@ tbody td:first-child{color:var(--text);font-weight:500}
           <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12"><circle cx="7" cy="4.5" r="2.5"/><path d="M1.5 12c0-2.5 2.5-4.5 5.5-4.5s5.5 2 5.5 4.5"/></svg>
           <span class="user-pill-name" id="user-pill-name">—</span>
         </div>
-        <button class="logout-btn" onclick="clearAllNotifications()" title="Clear notifications" style="padding:5px 8px;font-size:13px;line-height:1;margin-right:2px">&#128276;</button><button class="logout-btn" onclick="authLogout()">Log out</button>
+        <div class="notif-bell-wrap">
+          <button class="logout-btn" onclick="toggleNotifPanel()" title="Notifications" style="padding:5px 8px;font-size:13px;line-height:1;margin-right:2px">&#128276;</button>
+          <div class="notif-badge" id="notif-badge"></div>
+        </div><button class="logout-btn" onclick="authLogout()">Log out</button>
       </div>
       <div class="live-pill"><div class="live-dot"></div>Auto-save on</div>
     </div>
@@ -1416,29 +1445,32 @@ function renderSheet() {
   var socAbbrMap = {'Instagram':'IG','X':'X','LinkedIn':'LI'};
   var socBtns = ['All'].concat(S.socials||['Instagram','X','LinkedIn']);
   document.getElementById('soc-btns').innerHTML = socBtns.map(function(s) {
-    var lbl = s === 'All' ? 'All' : (socAbbrMap[s] || s.substring(0,3));
+    var lbl = s === 'All' ? 'All' : (socAbbrMap[s] || s.substring(0,3).toUpperCase());
+    var isOn = (!shtSoc && s==='All') || shtSoc===s;
     var col = s !== 'All' && S.socialColors && S.socialColors[s] ? S.socialColors[s] : '';
     var style = col ? ' style="border-color:'+col+';color:'+col+'"' : '';
-    return '<button class="soc-btn' + ((!shtSoc&&s==='All')||shtSoc===s?' on':'') + '"' + style + ' onclick="setSocFlt(\'' + s + '\')">' + lbl + '</button>';
+    return '<button class="soc-btn' + (isOn ? ' on' : '') + '" data-sval="' + s + '"' + style + ' onclick="setSocFlt(this)">' + lbl + '</button>';
   }).join('');
   renderRows();
 }
 
-function setSocFlt(s) {
+function setSocFlt(btn) {
+  var s = btn.getAttribute('data-sval') || 'All';
   shtSoc = (s === 'All') ? '' : s;
   _shtPage = 1;
-  document.querySelectorAll('.soc-btn').forEach(function(b){ b.classList.toggle('on', b.textContent===s); });
+  document.querySelectorAll('.soc-btn').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-sval') === (shtSoc || 'All'));
+  });
   renderRows();
 }
 
 function renderRows() {
   var q = (document.getElementById('sht-q')||{value:''}).value.toLowerCase();
   var st = (document.getElementById('sht-status')||{value:''}).value;
-  var socMap = {IG:'Instagram', X:'X', LI:'LinkedIn'};
   var rows = S.rows.filter(function(r) {
     if (q && !(r.name||'').toLowerCase().includes(q) && !(r.notes||'').toLowerCase().includes(q)) return false;
     if (st && r.status !== st) return false;
-    if (shtSoc && r.social !== socMap[shtSoc]) return false;
+    if (shtSoc && r.social !== shtSoc) return false;
     // Date filter
     if (_dateFlt !== 'all') {
       if (!r.date) return false;
@@ -3434,27 +3466,147 @@ function fireReminderNotif(ev) {
   showReminderToast(ev, msg);
 }
 
-function showReminderToast(ev, msg) {
-  var existing = document.getElementById('reminder-toast-wrap');
-  if (!existing) {
-    var wrap = document.createElement('div');
-    wrap.id = 'reminder-toast-wrap';
-    wrap.style.cssText = 'position:fixed;top:18px;right:18px;z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:320px';
-    document.body.appendChild(wrap);
+// ── NOTIFICATION STORE ────────────────────────────────────────────────────────
+var _notifs = []; // {id, title, msg, time, read}
+var _notifIdCounter = 1;
+var _notifPanelOpen = false;
+
+function addNotif(title, msg) {
+  var n = { id: _notifIdCounter++, title: title, msg: msg, time: Date.now(), read: false };
+  _notifs.unshift(n);
+  if (_notifs.length > 50) _notifs = _notifs.slice(0, 50); // cap at 50
+  updateNotifBadge();
+  renderNotifList();
+}
+
+function updateNotifBadge() {
+  var badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  var unread = _notifs.filter(function(n){ return !n.read; }).length;
+  if (unread > 0) {
+    badge.textContent = unread > 9 ? '9+' : unread;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
   }
-  var wrap = document.getElementById('reminder-toast-wrap');
-  var item = document.createElement('div');
-  item.style.cssText = 'background:var(--bg2);border:1px solid var(--border2);border-left:3px solid #60a5fa;border-radius:9px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;align-items:flex-start;gap:10px;animation:slideIn .2s ease';
-  item.innerHTML = '<div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">&#128337; ' + ev.title + '</div><div style="font-size:11px;color:var(--text3)">' + msg + '</div></div>' +
-    '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0;line-height:1">&times;</button>';
-  wrap.appendChild(item);
-  setTimeout(function(){ if (item.parentElement) item.remove(); }, 8000);
+}
+
+function toggleNotifPanel() {
+  var panel = document.getElementById('notif-panel');
+  if (!panel) return;
+  _notifPanelOpen = !_notifPanelOpen;
+  panel.classList.toggle('open', _notifPanelOpen);
+  if (_notifPanelOpen) {
+    renderNotifList();
+    // Mark all as read when panel opens
+    setTimeout(function() {
+      _notifs.forEach(function(n){ n.read = true; });
+      updateNotifBadge();
+    }, 1500);
+  }
+}
+
+function renderNotifList() {
+  var list = document.getElementById('notif-list');
+  if (!list) return;
+  if (!_notifs.length) {
+    list.innerHTML = '<div class="notif-empty">No notifications yet.<br>Reminders will appear here.</div>';
+    return;
+  }
+  list.innerHTML = _notifs.map(function(n) {
+    var ago = timeAgo(n.time);
+    var unreadDot = !n.read ? '<div style="width:6px;height:6px;border-radius:50%;background:#60a5fa;margin-top:4px;flex-shrink:0"></div>' : '<div style="width:6px"></div>';
+    return '<div class="notif-item">' +
+      '<div class="notif-item-icon">&#128337;</div>' +
+      '<div class="notif-item-body">' +
+        '<div class="notif-item-title">' + n.title + '</div>' +
+        '<div class="notif-item-msg">' + n.msg + '</div>' +
+        '<div class="notif-item-time">' + ago + '</div>' +
+      '</div>' +
+      unreadDot +
+      '<button class="notif-item-del" onclick="deleteNotif(' + n.id + ')" title="Remove">&times;</button>' +
+    '</div>';
+  }).join('');
+}
+
+function deleteNotif(id) {
+  _notifs = _notifs.filter(function(n){ return n.id !== id; });
+  updateNotifBadge();
+  renderNotifList();
+}
+
+function markAllNotifsRead() {
+  _notifs.forEach(function(n){ n.read = true; });
+  updateNotifBadge();
+  renderNotifList();
 }
 
 function clearAllNotifications() {
-  var wrap = document.getElementById('reminder-toast-wrap');
-  if (wrap) wrap.innerHTML = '';
+  _notifs = [];
+  updateNotifBadge();
+  renderNotifList();
+  // Close panel
+  var panel = document.getElementById('notif-panel');
+  if (panel) panel.classList.remove('open');
+  _notifPanelOpen = false;
   toast('Notifications cleared');
+}
+
+function removeToastItem(btn) {
+  var el = btn.parentElement;
+  if (el) el.remove();
+}
+
+function timeAgo(ts) {
+  var diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+// Close panel on outside click
+document.addEventListener('click', function(e) {
+  if (!_notifPanelOpen) return;
+  var panel = document.getElementById('notif-panel');
+  var bellWrap = document.querySelector('.notif-bell-wrap');
+  if (panel && bellWrap && !panel.contains(e.target) && !bellWrap.contains(e.target)) {
+    panel.classList.remove('open');
+    _notifPanelOpen = false;
+  }
+});
+
+// ── TOAST (top-right, hovers for 60 seconds then fades away) ─────────────────
+function showReminderToast(ev, msg) {
+  // Ensure static container exists
+  var wrap = document.getElementById('reminder-toast-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'reminder-toast-wrap';
+    wrap.style.cssText = 'position:fixed;top:18px;right:18px;z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:320px;pointer-events:none';
+    document.body.appendChild(wrap);
+  }
+
+  // Create toast item
+  var item = document.createElement('div');
+  item.className = 'reminder-toast-item';
+  item.style.cssText = 'background:var(--bg2);border:1px solid var(--border2);border-left:3px solid #60a5fa;border-radius:9px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.65);display:flex;align-items:flex-start;gap:10px;pointer-events:all;transition:opacity .6s ease;animation:slideIn .25s ease';
+  item.innerHTML =
+    '<div style="flex:1">' +
+      '<div style="font-size:13px;font-weight:600;margin-bottom:2px;color:var(--text)">&#128337; ' + ev.title + '</div>' +
+      '<div style="font-size:11px;color:var(--text3)">' + msg + '</div>' +
+    '</div>' +
+    '<button onclick="removeToastItem(this)" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:0;line-height:1;pointer-events:all">&times;</button>';
+  wrap.appendChild(item);
+
+  // Store in notif inbox too
+  addNotif(ev.title, msg);
+
+  // Fade out after 55s, remove after 60s
+  setTimeout(function() {
+    item.style.opacity = '0';
+    setTimeout(function(){ if (item.parentElement) item.remove(); }, 600);
+  }, 55000);
 }
 
 
@@ -3581,6 +3733,25 @@ if (document.readyState === "loading") {
     <button onclick="closeResetModal()" style="margin-top:10px;background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancel</button>
   </div>
 </div>
+
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-panel-head">
+    <span class="notif-panel-title">&#128276; Notifications</span>
+    <div class="notif-panel-actions">
+      <button class="notif-panel-clear" onclick="markAllNotifsRead()">Mark all read</button>
+      <button class="notif-panel-clear" onclick="clearAllNotifications()">Clear all</button>
+      <button class="notif-panel-clear" onclick="toggleNotifPanel()" style="font-size:16px;padding:0 4px">&times;</button>
+    </div>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="notif-empty">No notifications yet</div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER (top-right, 60s fade) -->
+<div id="reminder-toast-wrap" style="position:fixed;top:18px;right:18px;z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:320px;pointer-events:none"></div>
 
 </body>
 </html>
