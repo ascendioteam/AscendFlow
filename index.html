@@ -2590,110 +2590,125 @@ function setExpDateMode(mode) {
 }
 
 function renderExportModal() {
-  var type = _expType;
+  var type    = _expType;
   var allRows = type === 'sheet' ? S.rows : S.leads;
 
-  // Build available months from data
+  // Months
   var seen = {};
   allRows.forEach(function(r) {
     if (!r.date) return;
-    var d = new Date(r.date + 'T12:00:00');
-    var key = d.getMonth() + '-' + d.getFullYear();
-    if (!seen[key]) seen[key] = {m: d.getMonth(), y: d.getFullYear(), key: key, label: MONTHS[d.getMonth()] + ' ' + d.getFullYear()};
+    var d = new Date(r.date+'T12:00:00');
+    var key = d.getMonth()+'-'+d.getFullYear();
+    if (!seen[key]) seen[key] = {m:d.getMonth(),y:d.getFullYear(),key:key,label:MONTHS[d.getMonth()]+' '+d.getFullYear()};
   });
-  var months = Object.values(seen).sort(function(a,b){ return (b.y*12+b.m)-(a.y*12+a.m); });
-
-  var statusSet = {};
-  allRows.forEach(function(r){ if(r.status) statusSet[r.status]=1; });
+  var months = Object.values(seen).sort(function(a,b){return (b.y*12+b.m)-(a.y*12+a.m);});
+  var statusSet = {}; allRows.forEach(function(r){if(r.status)statusSet[r.status]=1;});
   var statuses = Object.keys(statusSet).sort();
-
-  var socialSet = {};
-  allRows.forEach(function(r){ if(r.social) socialSet[r.social]=1; });
+  var socialSet = {}; allRows.forEach(function(r){if(r.social)socialSet[r.social]=1;});
   var socials = Object.keys(socialSet).sort();
 
-  function cbRow(label, arr, val, toggleFn) {
-    var checked = arr.indexOf(val) > -1;
-    var enc = encodeURIComponent(val);
-    return '<div onclick="' + toggleFn + '(decodeURIComponent(\'' + enc + '\'))" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;border-radius:6px">' +
-      '<div style="width:14px;height:14px;border-radius:3px;border:1.5px solid ' + (checked?'#fff':'var(--border2)') + ';background:' + (checked?'#fff':'var(--bg3)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:#000">' +
-        (checked ? '&#10003;' : '') +
-      '</div>' +
-      '<span style="font-size:12px;color:var(--text' + (checked?'':'2') + ')">' + label + '</span>' +
-    '</div>';
-  }
-
-  // Tab style
+  // Mode tabs — use data-mode attribute, no inline string args
   function modeTab(label, mode) {
     var active = _expDateMode === mode;
-    return '<button onclick="setExpDateMode(\'' + mode + '\')" style="flex:1;padding:7px 0;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:' + (active?'500':'400') + ';font-family:inherit;background:' + (active?'var(--bg4)':'transparent') + ';color:' + (active?'var(--text)':'var(--text3)') + ';transition:all .12s">' + label + '</button>';
+    return '<button data-mode="'+mode+'" onclick="onExpModeTab(this)" style="flex:1;padding:7px 0;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:'+(active?'600':'400')+';font-family:inherit;background:'+(active?'var(--bg4)':'transparent')+';color:'+(active?'var(--text)':'var(--text3)')+';transition:all .12s">'+label+'</button>';
   }
 
-  // Date section
-  var monthOpts = '<option value="">Select month...</option>' +
-    months.map(function(mo){ return '<option value="' + mo.key + '"' + (_expMonth===mo.key?' selected':'') + '>' + mo.label + '</option>'; }).join('');
+  var monthOpts = '<option value="">Select month...</option>'+
+    months.map(function(mo){ return '<option value="'+mo.key+'"'+(_expMonth===mo.key?' selected':'')+'>'+mo.label+'</option>'; }).join('');
 
   var dateSection =
-    '<div style="display:flex;gap:3px;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:14px">' +
-      modeTab('All time', 'all') +
-      modeTab('By month', 'month') +
-      modeTab('Custom range', 'custom') +
-    '</div>' +
-    (_expDateMode === 'month' ?
-      '<div style="margin-bottom:14px">' +
-        '<select onchange="_expMonth=this.value;renderExportModal()" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 11px;color:var(--text);font-family:sans-serif;font-size:13px;outline:none">' +
-          monthOpts +
-        '</select>' +
+    '<div style="display:flex;gap:3px;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:14px">'+
+      modeTab('All time','all')+modeTab('By month','month')+modeTab('Custom range','custom')+
+    '</div>'+
+    (_expDateMode==='month' ?
+      '<div style="margin-bottom:14px"><select onchange="_expMonth=this.value" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 11px;color:var(--text);font-family:sans-serif;font-size:13px;outline:none">'+monthOpts+'</select></div>'
+    : _expDateMode==='custom' ?
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'+
+        '<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">From</div>'+
+          '<input type="date" id="exp-from-input" value="'+_expFrom+'" onchange="_expFrom=this.value;updateExpCount()" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-family:sans-serif;font-size:13px;outline:none"></div>'+
+        '<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">To</div>'+
+          '<input type="date" id="exp-to-input" value="'+_expTo+'" onchange="_expTo=this.value;updateExpCount()" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-family:sans-serif;font-size:13px;outline:none"></div>'+
       '</div>'
-    : _expDateMode === 'custom' ?
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' +
-        '<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">From</div>' +
-          '<input type="date" value="' + _expFrom + '" onchange="_expFrom=this.value" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-family:sans-serif;font-size:13px;outline:none"></div>' +
-        '<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">To</div>' +
-          '<input type="date" value="' + _expTo + '" onchange="_expTo=this.value" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-family:sans-serif;font-size:13px;outline:none"></div>' +
-      '</div>'
-    : '');
+    :
+      // All time — show select all / clear all + count
+      '<div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">'+
+        '<button onclick="selectAllExpStatuses()" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:inherit">Select All</button>'+
+        '<button onclick="clearExpFilters()" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:inherit">Clear All</button>'+
+        '<span style="font-size:11px;color:var(--text3)">Filter by status/social below</span>'+
+      '</div>');
 
-  var section = function(title, content) {
-    return '<div style="margin-bottom:12px">' +
-      '<div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">' + title + '</div>' +
-      content +
-    '</div>';
-  };
+  // Checkboxes — use data attributes, NO re-render on click (prevents scroll jump)
+  function cbRow(label, arr, val, kind) {
+    var checked = arr.indexOf(val) > -1;
+    return '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:6px;user-select:none">'+
+      '<input type="checkbox" data-expkind="'+kind+'" data-expval="'+encodeURIComponent(val)+'" '+(checked?'checked':'')+' onchange="onExpCheck(this)" style="width:14px;height:14px;cursor:pointer;accent-color:#fff">'+
+      '<span style="font-size:12px;color:var(--text)">'+label+'</span>'+
+    '</label>';
+  }
 
   var statusCbs = statuses.length
-    ? statuses.map(function(s){ return cbRow(s, _expStatuses, s, 'toggleExpStatus'); }).join('')
-    : '<div style="font-size:12px;color:var(--text3);padding:4px 8px">No data</div>';
-
+    ? statuses.map(function(s){ return cbRow(s,_expStatuses,s,'status'); }).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:4px 8px">No data yet</div>';
   var socialCbs = socials.length
-    ? socials.map(function(s){ return cbRow(s, _expSocials, s, 'toggleExpSocial'); }).join('')
-    : '<div style="font-size:12px;color:var(--text3);padding:4px 8px">No data</div>';
+    ? socials.map(function(s){ return cbRow(s,_expSocials,s,'social'); }).join('')
+    : '';
 
-  var hasFilters = (_expDateMode === 'month' && _expMonth) || (_expDateMode === 'custom' && (_expFrom || _expTo)) || _expStatuses.length || _expSocials.length;
-  var matchCount = hasFilters ? getExportRows().length : allRows.length;
+  var matchCount = getExportRows().length;
 
   var body =
-    dateSection +
-    '<div style="max-height:200px;overflow-y:auto">' +
-    section('Status', statusCbs) +
-    section('Social', socialCbs) +
-    '</div>' +
-    '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:8px;display:flex;align-items:center;justify-content:space-between">' +
-      '<span style="font-size:12px;color:var(--text3)">' + (hasFilters ? matchCount + ' of ' + allRows.length + ' entries' : allRows.length + ' entries total') + '</span>' +
-      (hasFilters ? '<button class="btn" style="font-size:11px;padding:3px 9px;color:var(--text3)" onclick="clearExpFilters()">Clear</button>' : '') +
+    dateSection+
+    '<div id="exp-scroll-area" style="max-height:220px;overflow-y:auto">'+
+      '<div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:4px 8px 2px">Status</div>'+
+      statusCbs+
+      (socialCbs ? '<div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:8px 8px 2px">Social</div>'+socialCbs : '')+
+    '</div>'+
+    '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:8px;display:flex;align-items:center;justify-content:space-between">'+
+      '<span id="exp-count-lbl" style="font-size:12px;color:var(--text3)">'+matchCount+' of '+allRows.length+' entries</span>'+
     '</div>';
 
   var footer =
-    '<button class="btn" onclick="closeModal()">Cancel</button>' +
-    '<button class="btn btn-primary" onclick="doExport' + (type==='sheet'?'Sheet':'Leads') + '()" style="min-width:110px">Download CSV</button>';
+    '<button class="btn" onclick="closeModal()">Cancel</button>'+
+    '<button class="btn btn-primary" onclick="doExport'+(type==='sheet'?'Sheet':'Leads')+'()" style="min-width:140px">&#8595; Download CSV</button>';
 
-  var title = 'Export ' + (type==='sheet' ? 'Tracking Sheet' : 'Leads');
-  var box = document.getElementById('modal-box');
-  if (box && document.getElementById('modal-bg').classList.contains('open')) {
-    box.innerHTML = '<div class="mh"><span class="mh-title">' + title + '</span><button class="mh-close" onclick="closeModal()">&#215;</button></div>' + body + '<div class="mfoot">' + footer + '</div>';
-  } else {
-    showModal(title, body, footer);
-  }
+  var title = 'Export '+(type==='sheet'?'Tracking Sheet':'Leads');
+  showModal(title, body, footer);
 }
+
+// Mode tab click — no re-render, just swap CSS + show/hide sections
+function onExpModeTab(btn) {
+  _expDateMode = btn.getAttribute('data-mode') || 'all';
+  setExpDateMode(_expDateMode);
+}
+
+function updateExpCount() {
+  var lbl = document.getElementById('exp-count-lbl');
+  var allRows = _expType === 'sheet' ? S.rows : S.leads;
+  if (lbl) lbl.textContent = getExportRows().length + ' of ' + allRows.length + ' entries';
+}
+
+// Handle checkbox changes without re-rendering modal (prevents scroll jump)
+function onExpCheck(el) {
+  var kind = el.getAttribute('data-expkind');
+  var val  = decodeURIComponent(el.getAttribute('data-expval') || '');
+  var arr  = kind === 'status' ? _expStatuses : _expSocials;
+  var idx  = arr.indexOf(val);
+  if (el.checked) { if (idx === -1) arr.push(val); }
+  else { if (idx > -1) arr.splice(idx, 1); }
+  // Just update the count — don't re-render the whole modal (no scroll jump)
+  updateExpCount();
+}
+
+function selectAllExpStatuses() {
+  var allRows = _expType === 'sheet' ? S.rows : S.leads;
+  var statusSet = {};
+  allRows.forEach(function(r){ if(r.status) statusSet[r.status]=1; });
+  _expStatuses = Object.keys(statusSet);
+  // Check all status checkboxes in DOM without re-rendering
+  document.querySelectorAll('[data-expkind="status"]').forEach(function(cb){ cb.checked = true; });
+  updateExpCount();
+}
+
+
 
 function toggleExpStatus(s) { s = decodeURIComponent(s);
   var i = _expStatuses.indexOf(s);
@@ -2706,23 +2721,33 @@ function toggleExpSocial(s) { s = decodeURIComponent(s);
   renderExportModal();
 }
 function clearExpFilters() {
-  _expDateMode = 'all'; _expMonth = ''; _expFrom = ''; _expTo = '';
-  _expStatuses = []; _expSocials = [];
-  renderExportModal();
+  _expStatuses = [];
+  _expSocials  = [];
+  // Uncheck all checkboxes in DOM without re-rendering
+  document.querySelectorAll('[data-expkind]').forEach(function(cb){ cb.checked = false; });
+  updateExpCount();
 }
 
 function getExportRows() {
   var allRows = _expType === 'sheet' ? S.rows : S.leads;
   return allRows.filter(function(r) {
-    // Date filter
     if (_expDateMode === 'month' && _expMonth) {
       if (!r.date) return false;
       var d = new Date(r.date+'T12:00:00');
       var k = d.getMonth()+'-'+d.getFullYear();
       if (k !== _expMonth) return false;
     }
+    if (_expDateMode === 'custom') {
+      // Read live from inputs if they exist
+      var fromEl = document.getElementById('exp-from-input');
+      var toEl   = document.getElementById('exp-to-input');
+      var from = fromEl ? fromEl.value : _expFrom;
+      var to   = toEl   ? toEl.value   : _expTo;
+      if (from && r.date && r.date < from) return false;
+      if (to   && r.date && r.date > to)   return false;
+    }
     if (_expStatuses.length && _expStatuses.indexOf(r.status) === -1) return false;
-    if (_expSocials.length && _expSocials.indexOf(r.social) === -1) return false;
+    if (_expSocials.length  && _expSocials.indexOf(r.social)  === -1) return false;
     return true;
   });
 }
